@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 SmileAndCompile
+=======
+Teamname: SmileAndCompile
+>>>>>>> 3aa7bd173ba85a4c4268302edcadefce4630c8ee
 Ioannis Chalkias
 Mergim Millaku
 Kevin Schoergnhofer
