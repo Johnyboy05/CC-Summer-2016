@@ -625,6 +625,10 @@ int OP_SW      = 43;
 int *OPCODES; // array of strings representing MIPS opcodes
 
 int FCT_NOP     = 0;
+int FCT_SLL		= 0;
+int FCT_SRL		= 2;
+int FCT_SLLV	= 4;
+int FCT_SRLV	= 6;
 int FCT_JR      = 8;
 int FCT_SYSCALL = 12;
 int FCT_MFHI    = 16;
