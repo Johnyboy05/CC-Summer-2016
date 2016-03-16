@@ -5035,7 +5035,6 @@ void fct_sll() {
 		print((int*) ",");
 		printRegister(rt);
 		print((int*) ",");
-		// TODO variable shamt existiert noch nicht
 		print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
 		if (interpret) {
 			print((int*) ": ");
@@ -5074,7 +5073,6 @@ void fct_srl() {
 		print((int*) ",");
 		printRegister(rt);
 		print((int*) ",");
-		// TODO variable shamt existiert noch nicht
 		print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
 		if (interpret) {
 			print((int*) ": ");
