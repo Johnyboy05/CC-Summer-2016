@@ -625,10 +625,10 @@ int OP_SW      = 43;
 int *OPCODES; // array of strings representing MIPS opcodes
 
 int FCT_NOP     = 0;
-int FCT_SLL		= 0;
-int FCT_SRL		= 2;
-int FCT_SLLV	= 4;
-int FCT_SRLV	= 6;
+int FCT_SLL		 = 0;
+int FCT_SRL		 = 2;
+int FCT_SLLV	 = 4;
+int FCT_SRLV	 = 6;
 int FCT_JR      = 8;
 int FCT_SYSCALL = 12;
 int FCT_MFHI    = 16;
@@ -668,6 +668,10 @@ void initDecoder() {
     FUNCTIONS = malloc(43 * SIZEOFINTSTAR);
 
     *(FUNCTIONS + FCT_NOP)     = (int) "nop";
+	 *(FUNCTIONS + FCT_SLL)     = (int) "sll";
+	 *(FUNCTIONS + FCT_SRL)     = (int) "srl";
+	 *(FUNCTIONS + FCT_SLLV)     = (int) "sllv";
+	 *(FUNCTIONS + FCT_SRLV)     = (int) "srlv";
     *(FUNCTIONS + FCT_JR)      = (int) "jr";
     *(FUNCTIONS + FCT_SYSCALL) = (int) "syscall";
     *(FUNCTIONS + FCT_MFHI)    = (int) "mfhi";
@@ -879,6 +883,10 @@ void initMemory(int bytes) {
 
 void fct_syscall();
 void fct_nop();
+void fct_sll();
+void fct_srl();
+void fct_sllv();
+void fct_srlv();
 void op_jal();
 void op_j();
 void op_beq();
@@ -5010,6 +5018,22 @@ void fct_nop() {
 
     if (interpret)
         pc = pc + WORDSIZE;
+}
+
+void fct_sll() {
+	// TODO	
+}
+
+void fct_srl() {
+	// TODO
+}
+
+void fct_sllv() {
+	// TODO
+}
+
+void fct_srlv() {
+	// TODO
 }
 
 void op_jal() {
