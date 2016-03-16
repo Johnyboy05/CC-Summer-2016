@@ -594,6 +594,7 @@ int getRT(int instruction);
 int getRD(int instruction);
 int getFunction(int instruction);
 int getImmediate(int instruction);
+int getShamt(int instruction);
 int getInstrIndex(int instruction);
 int signExtend(int immediate);
 
@@ -625,7 +626,7 @@ int OP_SW      = 43;
 int *OPCODES; // array of strings representing MIPS opcodes
 
 int FCT_NOP     = 0;
-int FCT_SLL		= 0;
+int FCT_SLL		= 0; // probably irrelevant, because of the first if condition in the fct_nop() method
 int FCT_SRL		= 2;
 int FCT_SLLV	= 4;
 int FCT_SRLV	= 6;
@@ -668,8 +669,8 @@ void initDecoder() {
 
     FUNCTIONS = malloc(43 * SIZEOFINTSTAR);
 
-    *(FUNCTIONS + FCT_NOP)     = (int) "nop";
-	*(FUNCTIONS + FCT_SLL)     = (int) "sll";
+    *(FUNCTIONS + FCT_NOP)     = (int) "nop"; // irrelevant; see comment right below
+	*(FUNCTIONS + FCT_SLL)     = (int) "sll"; // depending on which of the two assignments (sll and nop) is first, nop-instructions will be named as sll, and vice versa (because of FCT_NOP == FCT_SLL)
 	*(FUNCTIONS + FCT_SRL)     = (int) "srl";
 	*(FUNCTIONS + FCT_SLLV)    = (int) "sllv";
 	*(FUNCTIONS + FCT_SRLV)    = (int) "srlv";
@@ -5886,9 +5887,9 @@ void execute() {
     }
 
     if (opcode == OP_SPECIAL) {
-        // TODO: FCT_NOP == FCT_SLL
 		if (function == FCT_NOP)
             fct_nop();
+		// irrelevant as long as FCT_NOP == FCT_SLL; still implemented it for possible changes in the future
 		else if (function == FCT_SLL)
             fct_sll();
 		else if (function == FCT_SRL)
