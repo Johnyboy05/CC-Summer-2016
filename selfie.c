@@ -648,6 +648,7 @@ int rs          = 0;
 int rt          = 0;
 int rd          = 0;
 int immediate   = 0;
+int shamt		= 0;
 int function    = 0;
 int instr_index = 0;
 
@@ -3754,6 +3755,10 @@ int getImmediate(int instruction) {
     return rightShift(leftShift(instruction, 16), 16);
 }
 
+int getShamt(int instruction) {
+	return rightShift(leftShift(instruction, 21), 27);
+}
+
 int getInstrIndex(int instruction) {
     return rightShift(leftShift(instruction, 6), 6);
 }
@@ -3803,6 +3808,7 @@ void decodeRFormat() {
     rt          = getRT(ir);
     rd          = getRD(ir);
     immediate   = 0;
+	shamt		= getShamt(ir);
     function    = getFunction(ir);
     instr_index = 0;
 }
