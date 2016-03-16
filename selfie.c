@@ -5100,7 +5100,45 @@ void fct_srl() {
 }
 
 void fct_sllv() {
-	// TODO
+	if (debug) {
+		printFunction(function);
+		print((int*) " ");
+		printRegister(rd);
+		print((int*) ",");
+		printRegister(rt);
+		print((int*) ",");
+		printRegister(rs);
+		if (interpret) {
+			print((int*) ": ");
+			printRegister(rd);
+			print((int*) "=");
+			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+			print((int*) ",");
+			printRegister(rt);
+			print((int*) "=");
+			print(itoa(*(registers+rt), string_buffer, 10, 0, 0));
+			print((int*) ",");
+			printRegister(rs);
+			print((int*) "=");
+			print(itoa(*(registers+rs), string_buffer, 10, 0, 0));	
+		}
+	}
+	
+	id (interpret) {
+		*(registers+rd) = leftShift(*(registers+rt), *(registers+rs));
+		
+		pc = pc + WORDSIZE;
+	}
+	
+	if (debug) {
+		if (interpret) {
+			print((int*) " -> ");
+			printRegister(rd);
+			print((int*) "=");
+			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+		}
+		println();
+	}
 }
 
 void fct_srlv() {
