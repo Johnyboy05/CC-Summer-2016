@@ -5044,7 +5044,7 @@ void fct_sll() {
 	}
 	
 	id (interpret) {
-		*(registers+rd) = leftshit(*(registers+rt), shamt);
+		*(registers+rd) = leftShift(*(registers+rt), shamt);
 		
 		pc = pc + WORDSIZE;
 	}
@@ -5061,7 +5061,42 @@ void fct_sll() {
 }
 
 void fct_srl() {
-	// TODO
+	if (debug) {
+		printFunction(function);
+		print((int*) " ");
+		printRegister(rd);
+		print((int*) ",");
+		printRegister(rt);
+		print((int*) ",");
+		// TODO variable shamt existiert noch nicht
+		print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
+		if (interpret) {
+			print((int*) ": ");
+			printRegister(rd);
+			print((int*) "=");
+			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+			print((int*) ",");
+			printRegister(rt);
+			print((int*) "=");
+			print(itoa(*(registers+rt), string_buffer, 10, 0, 0));			
+		}
+	}
+	
+	id (interpret) {
+		*(registers+rd) = rightShift(*(registers+rt), shamt);
+		
+		pc = pc + WORDSIZE;
+	}
+	
+	if (debug) {
+		if (interpret) {
+			print((int*) " -> ");
+			printRegister(rd);
+			print((int*) "=");
+			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+		}
+		println();
+	}
 }
 
 void fct_sllv() {
