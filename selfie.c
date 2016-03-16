@@ -5017,14 +5017,17 @@ void fct_syscall() {
 }
 
 void fct_nop() {
-	// TODO hier noch checken, ob wirklich fct_nop oder fct_sll aufgerufen werden soll.
-    if (debug) {
-        printFunction(function);
-        println();
-    }
+	if (shamt > 0)
+		fct_sll();
+	else {
+		if (debug) {
+			printFunction(function);
+			println();
+		}
 
-    if (interpret)
-        pc = pc + WORDSIZE;
+		if (interpret)
+			pc = pc + WORDSIZE;
+	}
 }
 
 void fct_sll() {
