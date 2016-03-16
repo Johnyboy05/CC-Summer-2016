@@ -5011,6 +5011,7 @@ void fct_syscall() {
 }
 
 void fct_nop() {
+	// TODO hier noch checken, ob wirklich fct_nop oder fct_sll aufgerufen werden soll.
     if (debug) {
         printFunction(function);
         println();
@@ -5021,7 +5022,42 @@ void fct_nop() {
 }
 
 void fct_sll() {
-	// TODO	
+	if (debug) {
+		printFunction(function);
+		print((int*) " ");
+		printRegister(rd);
+		print((int*) ",");
+		printRegister(rt);
+		print((int*) ",");
+		// TODO variable shamt existiert noch nicht
+		print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
+		if (interpret) {
+			print((int*) ": ");
+			printRegister(rd);
+			print((int*) "=");
+			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+			print((int*) ",");
+			printRegister(rt);
+			print((int*) "=");
+			print(itoa(*(registers+rt), string_buffer, 10, 0, 0));			
+		}
+	}
+	
+	id (interpret) {
+		*(registers+rd) = leftshit(*(registers+rt), shamt);
+		
+		pc = pc + WORDSIZE;
+	}
+	
+	if (debug) {
+		if (interpret) {
+			print((int*) " -> ");
+			printRegister(rd);
+			print((int*) "=");
+			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+		}
+		println();
+	}
 }
 
 void fct_srl() {
