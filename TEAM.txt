@@ -1,4 +1,5 @@
 Teamname: SmileAndCompile
-Ioannis Chalkias
-Mergim Millaku
-Kevin Schoergnhofer
+
+Ioannis Chalkias (Johnyboy05)
+Mergim Millaku (mmillaku)
+Kevin Schoergnhofer (schoergk)
