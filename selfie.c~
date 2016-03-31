@@ -263,14 +263,12 @@ int SYM_RETURN       = 18; // RETURN
 int SYM_COMMA        = 19; // ,
 int SYM_LT           = 20; // <
 int SYM_LEQ          = 21; // <=
-int SYM_LS			 = 22; // << (Left Shift)
-int SYM_RS			 = 23; // >> (Right Shift)
-int SYM_GT           = 24; // >
-int SYM_GEQ          = 25; // >=
-int SYM_NOTEQ        = 26; // !=
-int SYM_MOD          = 27; // %
-int SYM_CHARACTER    = 28; // character
-int SYM_STRING       = 29; // string
+int SYM_GT           = 22; // >
+int SYM_GEQ          = 23; // >=
+int SYM_NOTEQ        = 24; // !=
+int SYM_MOD          = 25; // %
+int SYM_CHARACTER    = 26; // character
+int SYM_STRING       = 27; // string
 
 int *SYMBOLS; // array of strings representing symbols
 
@@ -325,8 +323,6 @@ void initScanner () {
     *(SYMBOLS + SYM_RETURN)       = (int) "return";
     *(SYMBOLS + SYM_COMMA)        = (int) ",";
     *(SYMBOLS + SYM_LT)           = (int) "<";
-	*(SYMBOLS + SYM_LS)			  = (int) "<<";
-	*(SYMBOLS + SYM_RS)			  = (int) ">>"
     *(SYMBOLS + SYM_LEQ)          = (int) "<=";
     *(SYMBOLS + SYM_GT)           = (int) ">";
     *(SYMBOLS + SYM_GEQ)          = (int) ">=";
