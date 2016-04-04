@@ -1881,7 +1881,8 @@ int getSymbol() {
 
         symbol = SYM_RBRACE;
 
-    } else if (character == CHAR_COMMA) {
+    } else if (character == CHAR_COMMA
+) {
         getCharacter();
 
         symbol = SYM_COMMA;
@@ -2110,6 +2111,16 @@ int isPlusOrMinus() {
         return 0;
 }
 
+int isShiftOperator(){
+	if (symbol==SYM_LS)
+	   return 1;
+	if (symbol==SYM_RS)
+	    return 1;
+	else
+	   return 0;
+
+}
+
 int isComparison() {
     if (symbol == SYM_EQUALITY)
         return 1;
@@ -2173,6 +2184,7 @@ int lookForType() {
     else
         return 1;
 }
+
 
 void talloc() {
     // we use registers REG_T0-REG_T7 for temporaries
