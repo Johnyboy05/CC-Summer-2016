@@ -2376,7 +2376,7 @@ void load_integer(int value) {
         emitLeftShiftBy(3);
     }
 }
-int CHAR_PERCENTAGE   = '%';
+
 void load_string(int *string) {
     int length;
 
