@@ -326,7 +326,7 @@ void initScanner () {
     *(SYMBOLS + SYM_COMMA)        = (int) ",";
     *(SYMBOLS + SYM_LT)           = (int) "<";
     *(SYMBOLS + SYM_LS)			  = (int) "<<";
-    *(SYMBOLS + SYM_RS)			  = (int) ">>"
+    *(SYMBOLS + SYM_RS)			  = (int) ">>";
     *(SYMBOLS + SYM_LEQ)          = (int) "<=";
     *(SYMBOLS + SYM_GT)           = (int) ">";
     *(SYMBOLS + SYM_GEQ)          = (int) ">=";
@@ -2112,12 +2112,12 @@ int isPlusOrMinus() {
 }
 
 int isShiftOperator(){
-	if (symbol==SYM_LS)
-	   return 1;
-	if (symbol==SYM_RS)
-	    return 1;
+	if (symbol == SYM_LS)
+		return 1;
+	if (symbol == SYM_RS)
+		return 1;
 	else
-	   return 0;
+		return 0;
 
 }
 
