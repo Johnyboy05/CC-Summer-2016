@@ -457,6 +457,7 @@ int  gr_call(int *procedure);
 int  gr_factor();
 int  gr_term();
 int  gr_simpleExpression();
+int  gr_unnamed();
 int  gr_expression();
 void gr_while();
 void gr_if();
@@ -1894,14 +1895,14 @@ int getSymbol() {
 
             symbol = SYM_LEQ;
         }
-	if (character==CHAR_LT){
-		getCharacter();
+		else if (character == CHAR_LT) {
+			getCharacter();
 
-		symbol=SYM_LS;
-	}	 
-	else
-            symbol = SYM_LT;
-
+			symbol = SYM_LS;
+		}
+		else
+			symbol = SYM_LT;
+			
     } else if (character == CHAR_GT) {
         getCharacter();
 
@@ -1909,14 +1910,13 @@ int getSymbol() {
             getCharacter();
 
             symbol = SYM_GEQ;
-        } 	
-	if (character==CHAR_GT){
-	    getcharacter();
+        } else if (character == CHAR_GT) {
+			getcharacter();
 
-	    symbol=SYM_RS;
-	}else
-            symbol = SYM_GT;
-
+			symbol = SYM_RS;
+		} else
+			symbol = SYM_GT;
+			
     } else if (character == CHAR_EXCLAMATION) {
         getCharacter();
 
@@ -2797,6 +2797,40 @@ int gr_simpleExpression() {
     return ltype;
 }
 
+int gr_unnamed() {
+    int ltype;
+    int operatorSymbol;
+    int rtype;
+
+    ltype = gr_simpleExpression();
+
+	
+    if (isShiftOperator()) {
+        operatorSymbol = symbol;
+
+        getSymbol();
+
+        rtype = gr_unnamed();
+
+        if (ltype != rtype)
+            typeWarning(ltype, rtype);
+
+        if (operatorSymbol == SYM_LS) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLL);
+
+            tfree(1);
+
+        } else if (operatorSymbol == SYM_RS) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRL);
+
+            tfree(1);
+    }
+
+    return ltype;
+}
+	
+}
+
 int gr_expression() {
     int ltype;
     int operatorSymbol;
@@ -2804,7 +2838,7 @@ int gr_expression() {
 
     // assert: n = allocatedTemporaries
 
-    ltype = gr_simpleExpression();
+    ltype = gr_unnamed();
 
     // assert: allocatedTemporaries == n + 1
 
@@ -2814,7 +2848,7 @@ int gr_expression() {
 
         getSymbol();
 
-        rtype = gr_simpleExpression();
+        rtype = gr_unnamed();
 
         // assert: allocatedTemporaries == n + 2
 
