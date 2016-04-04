@@ -2834,11 +2834,10 @@ int gr_unnamed() {
             emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRL);
 
             tfree(1);
+		}
     }
 
     return ltype;
-}
-	
 }
 
 int gr_expression() {
