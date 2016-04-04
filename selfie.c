@@ -1894,10 +1894,10 @@ int getSymbol() {
 
             symbol = SYM_LEQ;
         }
-	if(character==CHAR_LT){
+	if (character==CHAR_LT){
 		getCharacter();
 
-		symbol=SYM_LS
+		symbol=SYM_LS;
 	}	 
 	else
             symbol = SYM_LT;
@@ -1909,7 +1909,12 @@ int getSymbol() {
             getCharacter();
 
             symbol = SYM_GEQ;
-        } else
+        } 	
+	if (character==CHAR_GT){
+	    getcharacter();
+
+	    symbol=SYM_RS;
+	}else
             symbol = SYM_GT;
 
     } else if (character == CHAR_EXCLAMATION) {
