@@ -1882,8 +1882,7 @@ int getSymbol() {
 
         symbol = SYM_RBRACE;
 
-    } else if (character == CHAR_COMMA
-) {
+    } else if (character == CHAR_COMMA) {
         getCharacter();
 
         symbol = SYM_COMMA;
@@ -1912,7 +1911,7 @@ int getSymbol() {
 
             symbol = SYM_GEQ;
         } else if (character == CHAR_GT) {
-			getcharacter();
+			getCharacter();
 
 			symbol = SYM_RS;
 		} else
@@ -2815,7 +2814,6 @@ int gr_unnamed() {
     int rtype;
 
     ltype = gr_simpleExpression();
-
 	
     if (isShiftOperator()) {
         operatorSymbol = symbol;
