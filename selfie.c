@@ -224,8 +224,8 @@ void printLineNumber(int* message, int line);
 
 void syntaxErrorMessage(int *message);
 void syntaxErrorCharacter(int character);
-<
-void getCharacter();nt SYM_LT           = 20; // 
+
+void getCharacter(); 
 
 int isCharacterWhitespace();
 int findNextCharacter();
