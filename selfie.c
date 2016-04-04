@@ -224,8 +224,8 @@ void printLineNumber(int* message, int line);
 
 void syntaxErrorMessage(int *message);
 void syntaxErrorCharacter(int character);
-
-void getCharacter();
+<
+void getCharacter();nt SYM_LT           = 20; // 
 
 int isCharacterWhitespace();
 int findNextCharacter();
@@ -251,7 +251,7 @@ int SYM_ELSE         = 6;  // ELSE
 int SYM_PLUS         = 7;  // +
 int SYM_MINUS        = 8;  // -
 int SYM_ASTERISK     = 9;  // *
-int SYM_DIV          = 10; // /
+int SYM_DIV          = 10; // /nt SYM_LT           = 20; // 
 int SYM_EQUALITY     = 11; // ==
 int SYM_ASSIGN       = 12; // =
 int SYM_LPARENTHESIS = 13; // (
@@ -302,7 +302,7 @@ int sourceFD    = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-    SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+    SYMBOLS = malloc(30 * SIZEOFINTSTAR);
 
     *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
     *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -325,8 +325,8 @@ void initScanner () {
     *(SYMBOLS + SYM_RETURN)       = (int) "return";
     *(SYMBOLS + SYM_COMMA)        = (int) ",";
     *(SYMBOLS + SYM_LT)           = (int) "<";
-	*(SYMBOLS + SYM_LS)			  = (int) "<<";
-	*(SYMBOLS + SYM_RS)			  = (int) ">>"
+    *(SYMBOLS + SYM_LS)			  = (int) "<<";
+    *(SYMBOLS + SYM_RS)			  = (int) ">>"
     *(SYMBOLS + SYM_LEQ)          = (int) "<=";
     *(SYMBOLS + SYM_GT)           = (int) ">";
     *(SYMBOLS + SYM_GEQ)          = (int) ">=";
@@ -1893,7 +1893,13 @@ int getSymbol() {
             getCharacter();
 
             symbol = SYM_LEQ;
-        } else
+        }
+	if(character==CHAR_LT){
+		getCharacter();
+
+		symbol=SYM_LS
+	}	 
+	else
             symbol = SYM_LT;
 
     } else if (character == CHAR_GT) {
@@ -2353,7 +2359,7 @@ void load_integer(int value) {
         emitLeftShiftBy(3);
     }
 }
-
+int CHAR_PERCENTAGE   = '%';
 void load_string(int *string) {
     int length;
 
