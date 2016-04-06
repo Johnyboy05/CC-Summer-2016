@@ -457,7 +457,7 @@ int  gr_call(int *procedure);
 int  gr_factor();
 int  gr_term();
 int  gr_simpleExpression();
-int  gr_unnamed();
+int  gr_shiftExpression();
 int  gr_expression();
 void gr_while();
 void gr_if();
@@ -2808,7 +2808,7 @@ int gr_simpleExpression() {
     return ltype;
 }
 
-int gr_unnamed() {
+int gr_shiftExpression() {
     int ltype;
     int operatorSymbol;
     int rtype;
@@ -2820,7 +2820,7 @@ int gr_unnamed() {
 
         getSymbol();
 
-        rtype = gr_unnamed();
+        rtype = gr_simpleExpression();
 
         if (ltype != rtype)
             typeWarning(ltype, rtype);
@@ -2847,7 +2847,7 @@ int gr_expression() {
 
     // assert: n = allocatedTemporaries
 
-    ltype = gr_unnamed();
+    ltype = gr_shiftExpression();
 
     // assert: allocatedTemporaries == n + 1
 
@@ -2857,7 +2857,7 @@ int gr_expression() {
 
         getSymbol();
 
-        rtype = gr_unnamed();
+        rtype = gr_shiftExpression();
 
         // assert: allocatedTemporaries == n + 2
 
@@ -6683,10 +6683,10 @@ int main(int argc, int *argv) {
 
     argc = argc - 1;
     argv = argv + 1;
-	
+	 
     print((int*)"This is SmileAndCompile Selfie");
     println();
-
+	
     if (selfie(argc, (int*) argv) != 0) {
         print(selfieName);
         print((int*) ": usage: selfie { -c source | -o binary | -s assembly | -l binary } [ -m size ... | -d size ... | -y size ... ] ");
