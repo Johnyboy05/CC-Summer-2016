@@ -1188,10 +1188,8 @@ int twoToThePowerOf(int p) {
 int leftShift(int n, int b) {
     // assert: b >= 0;
 
-    if (b < 31)
-        return n * twoToThePowerOf(b);
-    else if (b == 31)
-        return n * twoToThePowerOf(30) * 2;
+    if (b <= 31)
+        return n << b;
     else
         return 0;
 }
@@ -6689,6 +6687,10 @@ int main(int argc, int *argv) {
 	 
     print((int*)"This is SmileAndCompile Selfie");
     println();
+	int temp;
+	temp=1;
+	temp=leftShift(temp,31);
+	print(itoa(temp, string_buffer, 10, 0, 0));
 	
     if (selfie(argc, (int*) argv) != 0) {
         print(selfieName);
