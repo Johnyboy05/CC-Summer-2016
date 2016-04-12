@@ -2835,12 +2835,12 @@ int gr_shiftExpression() {
             typeWarning(ltype, rtype);
 
         if (operatorSymbol == SYM_LS) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLL);
+            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_SLL);
 
             tfree(1);
 
         } else if (operatorSymbol == SYM_RS) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRL);
+            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_SRL);
 
             tfree(1);
 		}
