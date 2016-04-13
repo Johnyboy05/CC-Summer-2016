@@ -6680,10 +6680,6 @@ int main(int argc, int *argv) {
 	 
     print((int*)"This is SmileAndCompile Selfie");
     println();
-	//int temp;
-	//temp=-8;
-	//temp=rightShift(temp,1);
-	//print(itoa(temp, string_buffer, 10, 0, 0));
 	
     if (selfie(argc, (int*) argv) != 0) {
         print(selfieName);
