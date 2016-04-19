@@ -27,17 +27,19 @@ call             = identifier "(" [ expression { "," expression } ] ")" .
 
 literal          = integer | "'" ascii_character "'" .
 
+foldable       = [ "-" ] literal { ( "*" | "/" | "%" | "+" | "-" ) foldable } .
+
 factor           = [ cast ] 
                     ( [ "*" ] ( identifier | "(" expression ")" ) |
                       call |
                       literal |
                       """ { ascii_character } """ ) .
 
-term             = factor { ( "*" | "/" | "%" ) factor } .
+term             = ( factor | foldable ) { ( "*" | "/" | "%" ) ( factor | foldable ) } .
 
-simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
+simpleExpression = [ "-" ] ( term | foldable ) { ( "+" | "-" ) ( term | foldable ) } .
 
-shiftExpression  = simpleExpression [ ( "<<" | ">>" ) simpleExpression ] .
+shiftExpression  = ( simpleExpression | foldable ) [ ( "<<" | ">>" ) ( simpleExpression | foldable )  ] .
 
 expression       = shiftExpression [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) shiftExpression ] .
 
