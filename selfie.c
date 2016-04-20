@@ -2730,15 +2730,15 @@ int gr_term() {
     return ltype;
 }
 
-int gr_simpleExpression(int* foldingValue, int* foldable) {
+int gr_simpleExpression(int* foldedValue, int* foldable) {
     int sign;
     int ltype;
     int operatorSymbol;
     int rtype;
     int lFoldable;
     int rFoldable;
-    int lFoldingValue;
-    int rFoldingValue;
+    int lFoldedValue;
+    int rFoldedValue;
 
     // assert: n = allocatedTemporaries
 
@@ -2763,21 +2763,25 @@ int gr_simpleExpression(int* foldingValue, int* foldable) {
     } else
         sign = 0;
 
-    ltype = gr_term(foldingValue, foldable);
+    ltype = gr_term(foldedValue, foldable);
     lFoldable = foldable;
-    if (lFoldable)
-        lFoldingValue = foldingValue;
+    if (lFoldable == 1)
+        lFoldedValue = foldedValue;
+    if (sign)
+        lFoldedValue = 0 - lFoldedValue;
 
     // assert: allocatedTemporaries == n + 1
 
     if (sign) {
-        if (ltype != INT_T) {
-            typeWarning(INT_T, ltype);
+        if (lFoldable != 1) {
+            if (ltype != INT_T) {
+                typeWarning(INT_T, ltype);
 
-            ltype = INT_T;
+                ltype = INT_T;
+            }
+
+            emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
         }
-
-        emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
     }
 
     // + or -?
@@ -2786,11 +2790,12 @@ int gr_simpleExpression(int* foldingValue, int* foldable) {
 
         getSymbol();
 
-        tempFoldingValue = foldingValue;
-        rtype = gr_term(foldingValue, foldable);
+        if (foldable)
+            tempFoldedValue = foldedValue;
+        rtype = gr_term(foldedValue, foldable);
         rFoldable = foldable;
 
-        if (rFoldable) {
+        if (rFoladable == 1)) {
 
         }
 
@@ -2825,50 +2830,54 @@ int gr_shiftExpression() {
     int ltype;
     int operatorSymbol;
     int rtype;
-    int* foldingValue;
+    // TODO: muss für Pointer manuell Speicher alloziert werden?
+    int* foldedValue;
     int* foldable;
     int lFoldable;
     int rFoldable;
-    int lFoldingValue;
-    int rFoldingValue;
+    int lFoldedValue;
+    int rFoldedValue;
 
-    ltype = gr_simpleExpression(foldingValue, foldable);
+    ltype = gr_simpleExpression(foldedValue, foldable);
     lFoldable = foldable;
-    if (lFoldable)
-        lFoldingValue = foldingValue;
+    if (lFoladable == 1))
+        lFoldedValue = foldedValue;
 
     if (isShiftOperator()) {
         operatorSymbol = symbol;
 
         getSymbol();
 
-        rtype = gr_simpleExpression(foldingValue, foldable);
+        rtype = gr_simpleExpression(foldedValue, foldable);
         rFoldable = foldable;
-        if (rFoldable)
-            rFoldingValue = foldingValue;
+        if (rFoladable == 1))
+            rFoldedValue = foldedValue;
 
         if (ltype != rtype)
             typeWarning(ltype, rtype);
 
         int function = operatorSymbol;
 
-        if (lFoldable) {
-            if (rFoldable) {
-                emitRFormat(OP_SPECIAL, rFoldingValue, lFoldingValue, previousTemporary(), function);
+        if (lFoladable == 1)) {
+            if (rFoladable == 1)) {
+                emitRFormat(OP_SPECIAL, rFoldedValue, lFoldedValue, previousTemporary(), function);
             }
             else {
-                emitRFormat(OP_SPECIAL, currentTemporary(), lFoldingValue, previousTemporary(), function);
+                emitRFormat(OP_SPECIAL, currentTemporary(), lFoldedValue, previousTemporary(), function);
             }
         }
         else {
-            if (rFoldable) {
-                emitRFormat(OP_SPECIAL, rFoldingValue, previousTemporary(), previousTemporary(), function);
+            if (rFoladable == 1)) {
+                emitRFormat(OP_SPECIAL, rFoldedValue, previousTemporary(), previousTemporary(), function);
             }
             else {
                 emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), function);
         }
 
-        // TODO: wirklich immer freigeben?
+        // TODO: anstatt 0-setzen besser tfree?
+        foldable = 0;
+        foldedValue = 0;
+        // TODO: wirklich immer freigeben? was wird hier freigegeben?
         tfree(1);
     }
 
