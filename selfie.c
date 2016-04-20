@@ -2742,6 +2742,8 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
 
     // assert: n = allocatedTemporaries
 
+    tempFoldedValue = 0;
+
     // optional: -
     if (symbol == SYM_MINUS) {
         sign = 1;
@@ -2767,8 +2769,6 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
     lFoldable = foldable;
     if (lFoldable == 1)
         lFoldedValue = foldedValue;
-    if (sign)
-        lFoldedValue = 0 - lFoldedValue;
 
     // assert: allocatedTemporaries == n + 1
 
@@ -2782,6 +2782,8 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
 
             emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
         }
+        else
+            lFoldedValue = 0 - lFoldedValue;
     }
 
     // + or -?
@@ -2790,26 +2792,28 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
 
         getSymbol();
 
-        if (foldable)
-            tempFoldedValue = foldedValue;
         rtype = gr_term(foldedValue, foldable);
         rFoldable = foldable;
-
-        if (rFoladable == 1)) {
-
-        }
+        if (rFoldable == 1)
+            rFoldedValue = foldedValue;
 
         // assert: allocatedTemporaries == n + 2
 
         if (operatorSymbol == SYM_PLUS) {
-            if (ltype == INTSTAR_T) {
-                if (rtype == INT_T)
-                    // pointer arithmetic: factor of 2^2 of integer operand
-                    emitLeftShiftBy(2);
-            } else if (rtype == INTSTAR_T)
-                typeWarning(ltype, rtype);
+            if (lFoldable == 1) {
+                if (rFoldable == 1) {
+                    tempFoldedValue = tempFoldedValue + lFoldedValue + rFoldedValue;
+                }
+                
+            }
+                if (ltype == INTSTAR_T) {
+                    if (rtype == INT_T)
+                        // pointer arithmetic: factor of 2^2 of integer operand
+                        emitLeftShiftBy(2);
+                } else if (rtype == INTSTAR_T)
+                    typeWarning(ltype, rtype);
 
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+                emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
 
         } else if (operatorSymbol == SYM_MINUS) {
             if (ltype != rtype)
