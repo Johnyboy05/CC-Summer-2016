@@ -2532,7 +2532,7 @@ int gr_call(int *procedure) {
     return type;
 }
 
-int gr_factor() {
+int gr_factor(int* foldedValue, int* foldable) {
     int hasCast;
     int cast;
     int type;
@@ -2552,6 +2552,11 @@ int gr_factor() {
             exit(-1);
         else
             getSymbol();
+    }
+
+    if (isLiteral()) {
+        foldedValue = (int*) symbol;
+        foldable = (int*) 1;
     }
 
     // optional cast: [ cast ]
@@ -2685,14 +2690,21 @@ int gr_factor() {
         return type;
 }
 
-int gr_term() {
+int gr_term(int* foldedValue, int* foldable) {
     int ltype;
     int operatorSymbol;
     int rtype;
+    int lFoldable;
+    int rFoldable;
+    int lFoldedValue;
+    int rFoldedValue;
 
     // assert: n = allocatedTemporaries
 
-    ltype = gr_factor();
+    ltype = gr_factor(foldedValue, foldable);
+    lFoldable = (int) foldable;
+    if (lFoldable == 1)
+        lFoldedValue = (int) foldedValue;
 
     // assert: allocatedTemporaries == n + 1
 
@@ -2702,7 +2714,10 @@ int gr_term() {
 
         getSymbol();
 
-        rtype = gr_factor();
+        rtype = gr_factor(foldedValue, foldable);
+        rFoldable = (int) foldable;
+        if (rFoldable == 1)
+            rFoldedValue = (int) foldedValue;
 
         // assert: allocatedTemporaries == n + 2
 
@@ -2710,16 +2725,39 @@ int gr_term() {
             typeWarning(ltype, rtype);
 
         if (operatorSymbol == SYM_ASTERISK) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            if (lFoldable) {
+                if (rFoldable) {
+                    foldedValue = (int*) (lFoldedValue * rFoldedValue);
+                    foldable = (int*) 1;
+                }
+            }
+            else {
+                emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+                emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            }
 
         } else if (operatorSymbol == SYM_DIV) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-
+            if (lFoldable) {
+                if (rFoldable) {
+                    foldedValue = (int*) (lFoldedValue / rFoldedValue);
+                    foldable = (int*) 1;
+                }
+            }
+            else {
+                emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+                emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            }
         } else if (operatorSymbol == SYM_MOD) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+            if (lFoldable) {
+                if (rFoldable) {
+                    foldedValue = (int*) (lFoldedValue % rFoldedValue);
+                    foldable = (int*) 1;
+                }
+            }
+            else {
+                emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+                emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+            }
         }
 
         tfree(1);
@@ -2741,8 +2779,6 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
     int rFoldedValue;
 
     // assert: n = allocatedTemporaries
-
-    tempFoldedValue = 0;
 
     // optional: -
     if (symbol == SYM_MINUS) {
@@ -2766,9 +2802,9 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
         sign = 0;
 
     ltype = gr_term(foldedValue, foldable);
-    lFoldable = foldable;
+    lFoldable = (int) foldable;
     if (lFoldable == 1)
-        lFoldedValue = foldedValue;
+        lFoldedValue = (int) foldedValue;
 
     // assert: allocatedTemporaries == n + 1
 
@@ -2793,19 +2829,21 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
         getSymbol();
 
         rtype = gr_term(foldedValue, foldable);
-        rFoldable = foldable;
+        rFoldable = (int) foldable;
         if (rFoldable == 1)
-            rFoldedValue = foldedValue;
+            rFoldedValue =(int) foldedValue;
 
         // assert: allocatedTemporaries == n + 2
 
         if (operatorSymbol == SYM_PLUS) {
             if (lFoldable == 1) {
                 if (rFoldable == 1) {
-                    tempFoldedValue = tempFoldedValue + lFoldedValue + rFoldedValue;
+                    foldedValue = (int*) (lFoldedValue + rFoldedValue);
+                    foldable = (int*) 1;
                 }
-                
+
             }
+            else {
                 if (ltype == INTSTAR_T) {
                     if (rtype == INT_T)
                         // pointer arithmetic: factor of 2^2 of integer operand
@@ -2814,12 +2852,20 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
                     typeWarning(ltype, rtype);
 
                 emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+            }
 
         } else if (operatorSymbol == SYM_MINUS) {
             if (ltype != rtype)
                 typeWarning(ltype, rtype);
-
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
+            if (lFoldable == 1) {
+                if (rFoldable == 1) {
+                    foldedValue = (int*) (lFoldedValue + rFoldedValue);
+                    foldable = (int*) 1;
+                }
+            }
+            else {
+                emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
+            }
         }
 
         tfree(1);
@@ -2834,7 +2880,6 @@ int gr_shiftExpression() {
     int ltype;
     int operatorSymbol;
     int rtype;
-    // TODO: muss für Pointer manuell Speicher alloziert werden?
     int* foldedValue;
     int* foldable;
     int lFoldable;
@@ -2842,10 +2887,13 @@ int gr_shiftExpression() {
     int lFoldedValue;
     int rFoldedValue;
 
+    foldedValue = 0;
+    foldable = 0;
+
     ltype = gr_simpleExpression(foldedValue, foldable);
-    lFoldable = foldable;
-    if (lFoladable == 1))
-        lFoldedValue = foldedValue;
+    lFoldable = (int) foldable;
+    if (lFoldable == 1)
+        lFoldedValue = (int) foldedValue;
 
     if (isShiftOperator()) {
         operatorSymbol = symbol;
@@ -2853,17 +2901,17 @@ int gr_shiftExpression() {
         getSymbol();
 
         rtype = gr_simpleExpression(foldedValue, foldable);
-        rFoldable = foldable;
-        if (rFoladable == 1))
-            rFoldedValue = foldedValue;
+        rFoldable = (int) foldable;
+        if (rFoldable == 1)
+            rFoldedValue = (int) foldedValue;
 
         if (ltype != rtype)
             typeWarning(ltype, rtype);
 
         int function = operatorSymbol;
 
-        if (lFoladable == 1)) {
-            if (rFoladable == 1)) {
+        if (lFoldable == 1) {
+            if (rFoldable == 1) {
                 emitRFormat(OP_SPECIAL, rFoldedValue, lFoldedValue, previousTemporary(), function);
             }
             else {
@@ -2871,18 +2919,14 @@ int gr_shiftExpression() {
             }
         }
         else {
-            if (rFoladable == 1)) {
+            if (rFoldable == 1) {
                 emitRFormat(OP_SPECIAL, rFoldedValue, previousTemporary(), previousTemporary(), function);
             }
             else {
                 emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), function);
+            }
         }
-
-        // TODO: anstatt 0-setzen besser tfree?
-        foldable = 0;
-        foldedValue = 0;
-        // TODO: wirklich immer freigeben? was wird hier freigegeben?
-        tfree(1);
+        tfree(3);
     }
 
     return ltype;
