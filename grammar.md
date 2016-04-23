@@ -27,29 +27,27 @@ call             = identifier "(" [ expression { "," expression } ] ")" .
 
 literal          = integer | "'" ascii_character "'" .
 
-foldable       = [ "-" ] literal { ( "*" | "/" | "%" | "+" | "-" ) foldable } .
-
-factor           = [ cast ] 
+factor           = [ cast ]
                     ( [ "*" ] ( identifier | "(" expression ")" ) |
                       call |
                       literal |
                       """ { ascii_character } """ ) .
 
-term             = ( factor | foldable ) { ( "*" | "/" | "%" ) ( factor | foldable ) } .
+term             = factor { ( "*" | "/" | "%" ) factor } .
 
-simpleExpression = [ "-" ] ( term | foldable ) { ( "+" | "-" ) ( term | foldable ) } .
+simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 
-shiftExpression  = ( simpleExpression | foldable ) [ ( "<<" | ">>" ) ( simpleExpression | foldable )  ] .
+shiftExpression  = simpleExpression [ ( "<<" | ">>" ) simpleExpression ] .
 
 expression       = shiftExpression [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) shiftExpression ] .
 
-while            = "while" "(" expression ")" 
+while            = "while" "(" expression ")"
                              ( statement |
                                "{" { statement } "}" ) .
 
-if               = "if" "(" expression ")" 
-                             ( statement | 
-                               "{" { statement } "}" ) 
+if               = "if" "(" expression ")"
+                             ( statement |
+                               "{" { statement } "}" )
                          [ "else"
                              ( statement |
                                "{" { statement } "}" ) ] .
@@ -58,14 +56,14 @@ return           = "return" [ expression ] .
 
 statement        = ( [ "*" ] identifier | "*" "(" expression ")" ) "="
                       expression ";" |
-                    call ";" | 
-                    while | 
-                    if | 
+                    call ";" |
+                    while |
+                    if |
                     return ";" .
 
 variable         = type identifier .
 
-procedure        = "(" [ variable { "," variable } ] ")" 
+procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
 cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
