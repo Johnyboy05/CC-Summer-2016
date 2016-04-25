@@ -203,8 +203,8 @@ void initLibrary() {
 
   // accommodate at least 32-bit numbers for itoa, no mapping needed
   string_buffer = malloc(33);
-
   // does not need to be mapped
+
   filename_buffer = malloc(maxFilenameLength);
 
   // allocate and touch to make sure memory is mapped for read calls
@@ -269,14 +269,14 @@ int SYM_RETURN       = 18; // RETURN
 int SYM_COMMA        = 19; // ,
 int SYM_LT           = 20; // <
 int SYM_LEQ          = 21; // <=
-int SYM_LS    			 = 22; // << (Left Shift)
-int SYM_RS		    	 = 23; // >> (Right Shift)
-int SYM_GT           = 24; // >
-int SYM_GEQ          = 25; // >=
-int SYM_NOTEQ        = 26; // !=
-int SYM_MOD          = 27; // %
-int SYM_CHARACTER    = 28; // character
-int SYM_STRING       = 29; // string
+int SYM_GT           = 22; // >
+int SYM_GEQ          = 23; // >=
+int SYM_NOTEQ        = 24; // !=
+int SYM_MOD          = 25; // %
+int SYM_CHARACTER    = 26; // character
+int SYM_STRING       = 27; // string
+int SYM_LS    			 = 28; // << (Left Shift)
+int SYM_RS		    	 = 29; // >> (Right Shift)
 
 int* SYMBOLS; // array of strings representing symbols
 
@@ -339,6 +339,8 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_LS)           = (int) "<<";
+  *(SYMBOLS + SYM_RS)           = (int) ">>";
 
   character = CHAR_EOF;
   symbol  = SYM_EOF;
@@ -1187,22 +1189,31 @@ int twoToThePowerOf(int p) {
 int leftShift(int n, int b) {
   // assert: b >= 0;
 
-  if (b <= 31)
-    return n << b;
+  if (b < 31)
+    return n * twoToThePowerOf(b);
+  else if (b == 31)
+    return n * twoToThePowerOf(30) * 2;
   else
-      return 0;
+    return 0;
 }
 
 int rightShift(int n, int b) {
   // assert: b >= 0
 
-  if(b <= 31)
-		if(n >= 0)
-			return n >> b;
-		else
-			return (((n+1) + INT_MAX ) >> b) + ((INT_MAX >> b)+1);
-	else
-		return 0;
+  if (n >= 0) {
+    if (b < 31)
+      return n / twoToThePowerOf(b);
+    else
+      return 0;
+  } else if (b < 31)
+    // works even if n == INT_MIN:
+    // shift right n with msb reset and then restore msb
+    return ((n + 1) + INT_MAX) / twoToThePowerOf(b) +
+      (INT_MAX / twoToThePowerOf(b) + 1);
+  else if (b == 31)
+    return 1;
+  else
+    return 0;
 }
 
 int loadCharacter(int* s, int i) {
@@ -2529,7 +2540,7 @@ int gr_call(int* procedure) {
   return type;
 }
 
-int gr_factor(int* foldedValue, int* foldable) {
+int gr_factor() {
   int hasCast;
   int cast;
   int type;
@@ -2549,11 +2560,6 @@ int gr_factor(int* foldedValue, int* foldable) {
       exit(-1);
     else
       getSymbol();
-  }
-
-  if (isLiteral()) {
-    foldedValue = (int*) symbol;
-    foldable = (int*) 1;
   }
 
   // optional cast: [ cast ]
@@ -2687,21 +2693,14 @@ int gr_factor(int* foldedValue, int* foldable) {
     return type;
 }
 
-int gr_term(int* foldedValue, int* foldable) {
+int gr_term() {
   int ltype;
   int operatorSymbol;
   int rtype;
-  int lFoldable;
-  int rFoldable;
-  int lFoldedValue;
-  int rFoldedValue;
 
   // assert: n = allocatedTemporaries
 
-  ltype = gr_factor(foldedValue, foldable);
-  lFoldable = (int) foldable;
-  if (lFoldable == 1)
-    lFoldedValue = (int) foldedValue;
+  ltype = gr_factor();
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2711,51 +2710,25 @@ int gr_term(int* foldedValue, int* foldable) {
 
     getSymbol();
 
-      rtype = gr_factor(foldedValue, foldable);
-      rFoldable = (int) foldable;
-      if (rFoldable == 1)
-        rFoldedValue = (int) foldedValue;
+    rtype = gr_factor();
 
-      // assert: allocatedTemporaries == n + 2
+    // assert: allocatedTemporaries == n + 2
 
-      if (ltype != rtype)
-        typeWarning(ltype, rtype);
+    if (ltype != rtype)
+      typeWarning(ltype, rtype);
 
-      if (operatorSymbol == SYM_ASTERISK) {
-        if (lFoldable) {
-          if (rFoldable) {
-            foldedValue = (int*) (lFoldedValue * rFoldedValue);
-            foldable = (int*) 1;
-          }
-        }
-        else {
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-        }
+    if (operatorSymbol == SYM_ASTERISK) {
+      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
 
-      } else if (operatorSymbol == SYM_DIV) {
-        if (lFoldable) {
-          if (rFoldable) {
-            foldedValue = (int*) (lFoldedValue / rFoldedValue);
-            foldable = (int*) 1;
-          }
-        }
-        else {
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-        }
-      } else if (operatorSymbol == SYM_MOD) {
-        if (lFoldable) {
-          if (rFoldable) {
-            foldedValue = (int*) (lFoldedValue % rFoldedValue);
-            foldable = (int*) 1;
-          }
-        }
-        else {
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
-        }
-      }
+    } else if (operatorSymbol == SYM_DIV) {
+      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+
+    } else if (operatorSymbol == SYM_MOD) {
+      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+    }
 
     tfree(1);
   }
@@ -2765,15 +2738,11 @@ int gr_term(int* foldedValue, int* foldable) {
   return ltype;
 }
 
-int gr_simpleExpression(int* foldedValue, int* foldable) {
+int gr_simpleExpression() {
   int sign;
   int ltype;
   int operatorSymbol;
   int rtype;
-  int lFoldable;
-  int rFoldable;
-  int lFoldedValue;
-  int rFoldedValue;
 
   // assert: n = allocatedTemporaries
 
@@ -2796,61 +2765,47 @@ int gr_simpleExpression(int* foldedValue, int* foldable) {
       sign = 0;
     }
   } else
-      sign = 0;
+    sign = 0;
 
-  ltype = gr_term(foldedValue, foldable);
-  lFoldable = (int) foldable;
-  if (lFoldable == 1)
-    lFoldedValue = (int) foldedValue;
+  ltype = gr_term();
+
+  // assert: allocatedTemporaries == n + 1
 
   if (sign) {
-    if (lFoldable != 1) {
-      if (ltype != INT_T) {
-        typeWarning(INT_T, ltype);
+    if (ltype != INT_T) {
+      typeWarning(INT_T, ltype);
 
-        ltype = INT_T;
-      }
-      emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-    } else
-      lFoldedValue = 0 - lFoldedValue;
+      ltype = INT_T;
+    }
+
+    emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
   }
 
   // + or -?
   while (isPlusOrMinus()) {
     operatorSymbol = symbol;
 
-    rtype = gr_term(foldedValue, foldable);
-    rFoldable = (int) foldable;
-    if (rFoldable == 1)
-      rFoldedValue =(int) foldedValue;
+    getSymbol();
+
+    rtype = gr_term();
+
+    // assert: allocatedTemporaries == n + 2
 
     if (operatorSymbol == SYM_PLUS) {
-      if (lFoldable == 1) {
-        if (rFoldable == 1) {
-          foldedValue = (int*) (lFoldedValue + rFoldedValue);
-          foldable = (int*) 1;
-        }
-      } else {
-        if (ltype == INTSTAR_T) {
-          if (rtype == INT_T)
-            // pointer arithmetic: factor of 2^2 of integer operand
-            emitLeftShiftBy(2);
-        } else if (rtype == INTSTAR_T)
-          typeWarning(ltype, rtype);
+      if (ltype == INTSTAR_T) {
+        if (rtype == INT_T)
+          // pointer arithmetic: factor of 2^2 of integer operand
+          emitLeftShiftBy(2);
+      } else if (rtype == INTSTAR_T)
+        typeWarning(ltype, rtype);
 
-        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
-      }
+      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
 
     } else if (operatorSymbol == SYM_MINUS) {
       if (ltype != rtype)
         typeWarning(ltype, rtype);
-      if (lFoldable == 1) {
-        if (rFoldable == 1) {
-          foldedValue = (int*) (lFoldedValue + rFoldedValue);
-          foldable = (int*) 1;
-        }
-      } else
-        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
+
+      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
     }
 
     tfree(1);
@@ -2865,53 +2820,29 @@ int gr_shiftExpression() {
     int ltype;
     int operatorSymbol;
     int rtype;
-    int* foldedValue;
-    int* foldable;
-    int lFoldable;
-    int rFoldable;
-    int lFoldedValue;
-    int rFoldedValue;
 
-    foldedValue = 0;
-    foldable = 0;
-
-    ltype = gr_simpleExpression(foldedValue, foldable);
-    lFoldable = (int) foldable;
-    if (lFoldable == 1)
-        lFoldedValue = (int) foldedValue;
+    ltype = gr_simpleExpression();
 
     if (isShiftOperator()) {
         operatorSymbol = symbol;
 
         getSymbol();
 
-        rtype = gr_simpleExpression(foldedValue, foldable);
-        rFoldable = (int) foldable;
-        if (rFoldable == 1)
-            rFoldedValue = (int) foldedValue;
+        rtype = gr_simpleExpression();
 
         if (ltype != rtype)
             typeWarning(ltype, rtype);
 
-        int function = operatorSymbol;
+        if (operatorSymbol == SYM_LS) {
+            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_SLLV);
 
-        if (lFoldable == 1) {
-            if (rFoldable == 1) {
-                emitRFormat(OP_SPECIAL, rFoldedValue, lFoldedValue, previousTemporary(), function);
-            }
-            else {
-                emitRFormat(OP_SPECIAL, currentTemporary(), lFoldedValue, previousTemporary(), function);
-            }
-        }
-        else {
-            if (rFoldable == 1) {
-                emitRFormat(OP_SPECIAL, rFoldedValue, previousTemporary(), previousTemporary(), function);
-            }
-            else {
-                emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), function);
-            }
-        }
-        tfree(3);
+            tfree(1);
+
+        } else if (operatorSymbol == SYM_RS) {
+            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_SRLV);
+
+            tfree(1);
+		    }
     }
 
     return ltype;
