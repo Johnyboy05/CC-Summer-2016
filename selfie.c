@@ -5033,11 +5033,87 @@ void fct_srl() {
 }
 
 void fct_sllv() {
-	// TODO
+  if (debug) {
+    printFunction(function);
+    print((int*) " ");
+    printRegister(rd);
+    print((int*) ",");
+    printRegister(rs);
+    print((int*) ",");
+    printRegister(rt);
+    if (interpret) {
+      print((int*) ": ");
+      printRegister(rd);
+      print((int*) "=");
+      print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+      print((int*) ",");
+      printRegister(rs);
+      print((int*) "=");
+      print(itoa(*(registers+rs), string_buffer, 10, 0, 0));
+      print((int*) ",");
+      printRegister(rt);
+      print((int*) "=");
+      print(itoa(*(registers+rt), string_buffer, 10, 0, 0));
+    }
+  }
+
+  if (interpret) {
+    *(registers+rd) = leftShift(*(registers+rs), *(registers+rt));
+
+    pc = pc + WORDSIZE;
+  }
+
+  if (debug) {
+    if (interpret) {
+      print((int*) " -> ");
+      printRegister(rd);
+      print((int*) "=");
+      print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+    }
+    println();
+  }
 }
 
 void fct_srlv() {
-	// TODO
+  if (debug) {
+    printFunction(function);
+    print((int*) " ");
+    printRegister(rd);
+    print((int*) ",");
+    printRegister(rs);
+    print((int*) ",");
+    printRegister(rt);
+    if (interpret) {
+      print((int*) ": ");
+      printRegister(rd);
+      print((int*) "=");
+      print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+      print((int*) ",");
+      printRegister(rs);
+      print((int*) "=");
+      print(itoa(*(registers+rs), string_buffer, 10, 0, 0));
+      print((int*) ",");
+      printRegister(rt);
+      print((int*) "=");
+      print(itoa(*(registers+rt), string_buffer, 10, 0, 0));
+    }
+  }
+
+  if (interpret) {
+    *(registers+rd) = rightShift(*(registers+rs), *(registers+rt));
+
+    pc = pc + WORDSIZE;
+  }
+
+  if (debug) {
+    if (interpret) {
+      print((int*) " -> ");
+      printRegister(rd);
+      print((int*) "=");
+      print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+    }
+    println();
+  }
 }
 
 void op_jal() {
