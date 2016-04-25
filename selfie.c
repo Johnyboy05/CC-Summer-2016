@@ -203,8 +203,8 @@ void initLibrary() {
 
   // accommodate at least 32-bit numbers for itoa, no mapping needed
   string_buffer = malloc(33);
-  // does not need to be mapped
 
+  // does not need to be mapped
   filename_buffer = malloc(maxFilenameLength);
 
   // allocate and touch to make sure memory is mapped for read calls
@@ -257,7 +257,7 @@ int SYM_ELSE         = 6;  // ELSE
 int SYM_PLUS         = 7;  // +
 int SYM_MINUS        = 8;  // -
 int SYM_ASTERISK     = 9;  // *
-int SYM_DIV          = 10; // /nt SYM_LT           = 20; //
+int SYM_DIV          = 10; // /
 int SYM_EQUALITY     = 11; // ==
 int SYM_ASSIGN       = 12; // =
 int SYM_LPARENTHESIS = 13; // (
@@ -275,8 +275,6 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
-int SYM_LS    			 = 28; // << (Left Shift)
-int SYM_RS		    	 = 29; // >> (Right Shift)
 
 int* SYMBOLS; // array of strings representing symbols
 
@@ -308,8 +306,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-
-  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -339,8 +336,6 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
-  *(SYMBOLS + SYM_LS)           = (int) "<<";
-  *(SYMBOLS + SYM_RS)           = (int) ">>";
 
   character = CHAR_EOF;
   symbol  = SYM_EOF;
@@ -464,7 +459,6 @@ int  gr_call(int* procedure);
 int  gr_factor();
 int  gr_term();
 int  gr_simpleExpression();
-int  gr_shiftExpression();
 int  gr_expression();
 void gr_while();
 void gr_if();
@@ -606,7 +600,6 @@ int getRT(int instruction);
 int getRD(int instruction);
 int getFunction(int instruction);
 int getImmediate(int instruction);
-int getShamt(int instruction);
 int getInstrIndex(int instruction);
 int signExtend(int immediate);
 
@@ -638,10 +631,10 @@ int OP_SW      = 43;
 int* OPCODES; // array of strings representing MIPS opcodes
 
 int FCT_NOP     = 0;
-int FCT_SLL		= 0; // probably irrelevant, because of the first if condition in the fct_nop() method
-int FCT_SRL		= 2;
-int FCT_SLLV	= 4;
-int FCT_SRLV	= 6;
+int FCT_SLL		 = 0;
+int FCT_SRL		 = 2;
+int FCT_SLLV	 = 4;
+int FCT_SRLV	 = 6;
 int FCT_JR      = 8;
 int FCT_SYSCALL = 12;
 int FCT_MFHI    = 16;
@@ -661,7 +654,6 @@ int rs          = 0;
 int rt          = 0;
 int rd          = 0;
 int immediate   = 0;
-int shamt		= 0;
 int function    = 0;
 int instr_index = 0;
 
@@ -682,10 +674,10 @@ void initDecoder() {
   FUNCTIONS = malloc(43 * SIZEOFINTSTAR);
 
   *(FUNCTIONS + FCT_NOP)     = (int) "nop";
-  *(FUNCTIONS + FCT_SLL)     = (int) "sll"; // depending on which of the two assignments (sll and nop) is first, nop-instructions will be named as sll, and vice versa (because of FCT_NOP == FCT_SLL)
+  *(FUNCTIONS + FCT_SLL)     = (int) "sll";
   *(FUNCTIONS + FCT_SRL)     = (int) "srl";
-  *(FUNCTIONS + FCT_SLLV)    = (int) "sllv";
-  *(FUNCTIONS + FCT_SRLV)    = (int) "srlv";
+  *(FUNCTIONS + FCT_SLLV)     = (int) "sllv";
+  *(FUNCTIONS + FCT_SRLV)     = (int) "srlv";
   *(FUNCTIONS + FCT_JR)      = (int) "jr";
   *(FUNCTIONS + FCT_SYSCALL) = (int) "syscall";
   *(FUNCTIONS + FCT_MFHI)    = (int) "mfhi";
@@ -1898,30 +1890,22 @@ int getSymbol() {
     symbol = SYM_COMMA;
 
   } else if (character == CHAR_LT) {
-		getCharacter();
+    getCharacter();
 
     if (character == CHAR_EQUAL) {
       getCharacter();
 
       symbol = SYM_LEQ;
-    } else if (character == CHAR_LT) {
-      getCharacter();
-
-      symbol = SYM_LS;
     } else
       symbol = SYM_LT;
 
   } else if (character == CHAR_GT) {
-		getCharacter();
+    getCharacter();
 
     if (character == CHAR_EQUAL) {
       getCharacter();
 
       symbol = SYM_GEQ;
-    } else if (character == CHAR_GT) {
-      getCharacter();
-
-      symbol = SYM_RS;
     } else
       symbol = SYM_GT;
 
@@ -2118,16 +2102,6 @@ int isPlusOrMinus() {
     return 0;
 }
 
-int isShiftOperator(){
-	if (symbol == SYM_LS)
-		return 1;
-	if (symbol == SYM_RS)
-		return 1;
-	else
-		return 0;
-
-}
-
 int isComparison() {
   if (symbol == SYM_EQUALITY)
     return 1;
@@ -2191,7 +2165,6 @@ int lookForType() {
   else
     return 1;
 }
-
 
 void talloc() {
   // we use registers REG_T0-REG_T7 for temporaries
@@ -2816,38 +2789,6 @@ int gr_simpleExpression() {
   return ltype;
 }
 
-int gr_shiftExpression() {
-    int ltype;
-    int operatorSymbol;
-    int rtype;
-
-    ltype = gr_simpleExpression();
-
-    if (isShiftOperator()) {
-        operatorSymbol = symbol;
-
-        getSymbol();
-
-        rtype = gr_simpleExpression();
-
-        if (ltype != rtype)
-            typeWarning(ltype, rtype);
-
-        if (operatorSymbol == SYM_LS) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLLV);
-
-            tfree(1);
-
-        } else if (operatorSymbol == SYM_RS) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRLV);
-
-            tfree(1);
-		    }
-    }
-
-    return ltype;
-}
-
 int gr_expression() {
   int ltype;
   int operatorSymbol;
@@ -2855,7 +2796,7 @@ int gr_expression() {
 
   // assert: n = allocatedTemporaries
 
-  ltype = gr_shiftExpression();
+  ltype = gr_simpleExpression();
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2865,7 +2806,7 @@ int gr_expression() {
 
     getSymbol();
 
-    rtype = gr_shiftExpression();
+    rtype = gr_simpleExpression();
 
     // assert: allocatedTemporaries == n + 2
 
@@ -3821,10 +3762,6 @@ int getImmediate(int instruction) {
   return rightShift(leftShift(instruction, 16), 16);
 }
 
-int getShamt(int instruction) {
-	return rightShift(leftShift(instruction, 21), 27);
-}
-
 int getInstrIndex(int instruction) {
   return rightShift(leftShift(instruction, 6), 6);
 }
@@ -3874,7 +3811,6 @@ void decodeRFormat() {
   rt          = getRT(ir);
   rd          = getRD(ir);
   immediate   = 0;
-	shamt       = getShamt(ir);
   function    = getFunction(ir);
   instr_index = 0;
 }
@@ -5079,177 +5015,29 @@ void fct_syscall() {
 }
 
 void fct_nop() {
-	if (shamt > 0)
-		fct_sll();
-	else {
-		if (debug) {
-			printFunction(function);
-			println();
-		}
+  if (debug) {
+    printFunction(function);
+    println();
+  }
 
-		if (interpret)
-			pc = pc + WORDSIZE;
-	}
+  if (interpret)
+    pc = pc + WORDSIZE;
 }
 
 void fct_sll() {
-	if (debug) {
-		printFunction(function);
-		print((int*) " ");
-		printRegister(rd);
-		print((int*) ",");
-		printRegister(rs);
-		print((int*) ",");
-		print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
-		if (interpret) {
-			print((int*) ": ");
-			printRegister(rd);
-			print((int*) "=");
-			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
-			print((int*) ",");
-			printRegister(rs);
-			print((int*) "=");
-			print(itoa(*(registers+rs), string_buffer, 10, 0, 0));
-		}
-	}
-
-	if (interpret) {
-		*(registers+rd) = leftShift(*(registers+rs), shamt);
-
-		pc = pc + WORDSIZE;
-	}
-
-	if (debug) {
-		if (interpret) {
-			print((int*) " -> ");
-			printRegister(rd);
-			print((int*) "=");
-			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
-		}
-		println();
-	}
+	// TODO
 }
 
 void fct_srl() {
-	if (debug) {
-		printFunction(function);
-		print((int*) " ");
-		printRegister(rd);
-		print((int*) ",");
-		printRegister(rs);
-		print((int*) ",");
-		print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
-		if (interpret) {
-			print((int*) ": ");
-			printRegister(rd);
-			print((int*) "=");
-			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
-			print((int*) ",");
-			printRegister(rs);
-			print((int*) "=");
-			print(itoa(*(registers+rs), string_buffer, 10, 0, 0));
-		}
-	}
-
-	if (interpret) {
-		*(registers+rd) = rightShift(*(registers+rs), shamt);
-
-		pc = pc + WORDSIZE;
-	}
-
-	if (debug) {
-		if (interpret) {
-			print((int*) " -> ");
-			printRegister(rd);
-			print((int*) "=");
-			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
-		}
-		println();
-	}
+	// TODO
 }
 
 void fct_sllv() {
-	if (debug) {
-		printFunction(function);
-		print((int*) " ");
-		printRegister(rd);
-		print((int*) ",");
-		printRegister(rs);
-		print((int*) ",");
-		printRegister(rt);
-		if (interpret) {
-			print((int*) ": ");
-			printRegister(rd);
-			print((int*) "=");
-			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
-			print((int*) ",");
-			printRegister(rs);
-			print((int*) "=");
-			print(itoa(*(registers+rs), string_buffer, 10, 0, 0));
-			print((int*) ",");
-			printRegister(rt);
-			print((int*) "=");
-			print(itoa(*(registers+rt), string_buffer, 10, 0, 0));
-		}
-	}
-
-	if (interpret) {
-		*(registers+rd) = leftShift(*(registers+rs), *(registers+rt));
-
-		pc = pc + WORDSIZE;
-	}
-
-	if (debug) {
-		if (interpret) {
-			print((int*) " -> ");
-			printRegister(rd);
-			print((int*) "=");
-			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
-		}
-		println();
-	}
+	// TODO
 }
 
 void fct_srlv() {
-	if (debug) {
-		printFunction(function);
-		print((int*) " ");
-		printRegister(rd);
-		print((int*) ",");
-		printRegister(rs);
-		print((int*) ",");
-		printRegister(rt);
-		if (interpret) {
-			print((int*) ": ");
-			printRegister(rd);
-			print((int*) "=");
-			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
-			print((int*) ",");
-			printRegister(rs);
-			print((int*) "=");
-			print(itoa(*(registers+rs), string_buffer, 10, 0, 0));
-			print((int*) ",");
-			printRegister(rt);
-			print((int*) "=");
-			print(itoa(*(registers+rt), string_buffer, 10, 0, 0));
-		}
-	}
-
-	if (interpret) {
-		*(registers+rd) = rightShift(*(registers+rs), *(registers+rt));
-
-		pc = pc + WORDSIZE;
-	}
-
-	if (debug) {
-		if (interpret) {
-			print((int*) " -> ");
-			printRegister(rd);
-			print((int*) "=");
-			print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
-		}
-		println();
-	}
+	// TODO
 }
 
 void op_jal() {
@@ -5944,16 +5732,13 @@ void execute() {
   }
 
   if (opcode == OP_SPECIAL) {
-		if (function == FCT_NOP)
+    if (function == FCT_NOP)
       fct_nop();
-		// irrelevant as long as FCT_NOP == FCT_SLL; still implemented it for possible changes in the future
-		else if (function == FCT_SLL)
-      fct_sll();
-		else if (function == FCT_SRL)
+    else if (function == FCT_SRL)
       fct_srl();
     else if (function == FCT_SLLV)
       fct_sllv();
-		else if (function == FCT_SRLV)
+    else if (function == FCT_SRLV)
       fct_srlv();
     else if (function == FCT_ADDU)
       fct_addu();
@@ -6678,7 +6463,12 @@ int main(int argc, int* argv) {
 
   initInterpreter();
 
-  print((int*)"This is SmileAndCompile Selfie");
+  selfieName = (int*) *argv;
+
+  argc = argc - 1;
+  argv = argv + 1;
+
+  print((int*) "This is SmileAndCompile Selfie");
   println();
 
   if (selfie(argc, (int*) argv) != 0) {
@@ -6686,5 +6476,6 @@ int main(int argc, int* argv) {
     print((int*) ": usage: selfie { -c source | -o binary | -s assembly | -l binary } [ -m size ... | -d size ... | -y size ... ] ");
     println();
   }
+
   return 0;
 }
