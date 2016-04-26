@@ -463,6 +463,7 @@ int  gr_call(int* procedure);
 int  gr_factor();
 int  gr_term();
 int  gr_simpleExpression();
+int	 gr_shiftExpression();
 int  gr_expression();
 void gr_while();
 void gr_if();
@@ -2816,6 +2817,41 @@ int gr_simpleExpression() {
   return ltype;
 }
 
+int gr_shiftExpression() {
+    int ltype;
+    int operatorSymbol;
+    int rtype;
+
+    ltype = gr_simpleExpression();
+
+	
+    if (isShiftOperator()) {
+        operatorSymbol = symbol;
+
+        getSymbol();
+
+        rtype = gr_simpleExpression();
+
+        if (ltype != rtype)
+            typeWarning(ltype, rtype);
+
+        if (operatorSymbol == SYM_LS) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLLV);
+
+            tfree(1);
+
+        } else if (operatorSymbol == SYM_RS) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRLV);
+
+            tfree(1);
+    		}
+		}
+
+    return ltype;
+	
+}
+
+
 int gr_expression() {
   int ltype;
   int operatorSymbol;
@@ -2823,7 +2859,7 @@ int gr_expression() {
 
   // assert: n = allocatedTemporaries
 
-  ltype = gr_simpleExpression();
+  ltype = gr_shiftExpression();
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2833,7 +2869,7 @@ int gr_expression() {
 
     getSymbol();
 
-    rtype = gr_simpleExpression();
+    rtype = gr_shiftExpression();
 
     // assert: allocatedTemporaries == n + 2
 
