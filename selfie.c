@@ -591,6 +591,7 @@ void initRegister() {
 // -----------------------------------------------------------------
 
 int encodeRFormat(int opcode, int rs, int rt, int rd, int function);
+int encodeRSFormat(int opcode, int rs, int shamt, int rd, int function);
 int encodeIFormat(int opcode, int rs, int rt, int immediate);
 int encodeJFormat(int opcode, int instr_index);
 
@@ -615,12 +616,14 @@ void printFunction(int function);
 
 void decode();
 void decodeRFormat();
+void decodeRSFormat();
 void decodeIFormat();
 void decodeJFormat();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int OP_SPECIAL = 0;
+int OP_SSHAMT  = 1;
 int OP_J       = 2;
 int OP_JAL     = 3;
 int OP_BEQ     = 4;
@@ -702,6 +705,7 @@ void storeInstruction(int baddr, int instruction);
 
 void emitInstruction(int instruction);
 void emitRFormat(int opcode, int rs, int rt, int rd, int function);
+void emitRSFormat(int opcode, int rs, int rt, int shamt, int function);
 void emitIFormat(int opcode, int rs, int rt, int immediate);
 void emitJFormat(int opcode, int instr_index);
 
@@ -3711,6 +3715,22 @@ int encodeRFormat(int opcode, int rs, int rt, int rd, int function) {
 // -----------------------------------------------------------------
 // 32 bit
 //
+// +------+-----+-----+-----+-----+------+
+// |opcode| rs  | rt  | rd  |shamt|fction|
+// +------+-----+-----+-----+-----+------+
+//    6      5     5     5     5     6
+int encodeRSFormat(int opcode, int rs, int shamt, int rd, int function) {
+  // assert: 0 <= opcode < 2^6
+  // assert: 0 <= rs < 2^5
+  // assert: 0 <= rd < 2^5
+  // assert: 0 <= shamt < 2^5
+  // assert: 0 <= function < 2^6
+  return leftShift(leftShift(leftShift(leftShift(opcode, 5) + rs, 5) + rt, 10) + shamt, 6) + function;
+}
+
+// -----------------------------------------------------------------
+// 32 bit
+//
 // +------+-----+-----+----------------+
 // |opcode| rs  | rt  |   immediate    |
 // +------+-----+-----+----------------+
@@ -3797,6 +3817,8 @@ void decode() {
 
   if (opcode == 0)
     decodeRFormat();
+  else if (opcode == OP_SSHAMT)
+    decodeRSFormat();
   else if (opcode == OP_JAL)
     decodeJFormat();
   else if (opcode == OP_J)
@@ -3817,6 +3839,23 @@ void decodeRFormat() {
   rt          = getRT(ir);
   rd          = getRD(ir);
   immediate   = 0;
+  shamt       = 0;
+  function    = getFunction(ir);
+  instr_index = 0;
+}
+
+// --------------------------------------------------------------
+// 32 bit
+//
+// +------+-----+-----+-----+-----+------+
+// |opcode| rs  | rt  | rd  |shamt|fction|
+// +------+-----+-----+-----+-----+------+
+//    6      5     5     5     5     6
+void decodeRSFormat() {
+  rs          = getRS(ir);
+  rt          = 0;
+  rd          = getRT(ir);
+  immediate   = 0;
   shamt       = getShamt(ir);
   function    = getFunction(ir);
   instr_index = 0;
@@ -3834,6 +3873,7 @@ void decodeIFormat() {
   rt          = getRT(ir);
   rd          = 0;
   immediate   = getImmediate(ir);
+  shamt       = 0;
   function    = 0;
   instr_index = 0;
 }
@@ -3850,6 +3890,7 @@ void decodeJFormat() {
   rt          = 0;
   rd          = 0;
   immediate   = 0;
+  shamt       = 0;
   function    = 0;
   instr_index = getInstrIndex(ir);
 }
@@ -3901,6 +3942,10 @@ void emitRFormat(int opcode, int rs, int rt, int rd, int function) {
       emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_NOP); // pipeline delay
     }
   }
+}
+
+void emitRSFormat(int opcode, int rs, int shamt, int rd, int function) {
+  emitInstruction(encodeRSFormat(opcode, rs, shamt, rd, function));
 }
 
 void emitIFormat(int opcode, int rs, int rt, int immediate) {
@@ -5070,7 +5115,41 @@ void fct_sll() {
 }
 
 void fct_srl() {
-	// TODO
+  if (debug) {
+    printFunction(function);
+    print((int*) " ");
+    printRegister(rd);
+    print((int*) ",");
+    printRegister(rs);
+    print((int*) ",");
+    print(itoa(shamt, string_buffer, 10, 0, 0));
+    if (interpret) {
+      print((int*) ": ");
+      printRegister(rd);
+      print((int*) "=");
+      print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+      print((int*) ",");
+      printRegister(rs);
+      print((int*) "=");
+      print(itoa(*(registers+rs), string_buffer, 10, 0, 0));
+    }
+  }
+
+  if (interpret) {
+    *(registers+rd) = rightShift(*(registers+rs), shamt);
+
+    pc = pc + WORDSIZE;
+  }
+
+  if (debug) {
+    if (interpret) {
+      print((int*) " -> ");
+      printRegister(rd);
+      print((int*) "=");
+      print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+    }
+    println();
+  }
 }
 
 void fct_sllv() {
@@ -5851,8 +5930,6 @@ void execute() {
   if (opcode == OP_SPECIAL) {
     if (function == FCT_NOP)
       fct_nop();
-    else if (function == FCT_SRL)
-      fct_srl();
     else if (function == FCT_SLLV)
       fct_sllv();
     else if (function == FCT_SRLV)
@@ -5875,6 +5952,13 @@ void execute() {
       fct_jr();
     else if (function == FCT_SYSCALL)
       fct_syscall();
+    else
+      throwException(EXCEPTION_UNKNOWNINSTRUCTION, 0);
+  } else if (opcode == OP_SSHAMT) {
+    if (function == FCT_SLL)
+      fct_sll();
+    else if (function == FCT_SRL)
+      fct_srl();
     else
       throwException(EXCEPTION_UNKNOWNINSTRUCTION, 0);
   } else if (opcode == OP_ADDIU)
