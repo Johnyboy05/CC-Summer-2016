@@ -275,8 +275,8 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
-int SYM_LS			 		 = 28; // << 
-int SYM_RS			 		 = 29; // >> 
+int SYM_LS			 		 = 28; // <<
+int SYM_RS			 		 = 29; // >>
 
 int* SYMBOLS; // array of strings representing symbols
 
@@ -1206,7 +1206,7 @@ int rightShift(int n, int b) {
 			return n >> b;
 		else
 			return (((n+1) + INT_MAX ) >> b) + ((INT_MAX >> b)+1);
-	} else 
+	} else
 		return 0;
 }
 
@@ -1893,10 +1893,10 @@ int getSymbol() {
 
   } else if (character == CHAR_LT) {
     getCharacter();
-		
+
 		if (character == CHAR_LT){
-			getCharacter();			
-	
+			getCharacter();
+
 			symbol = SYM_LS;
     } else if (character == CHAR_EQUAL) {
       getCharacter();
@@ -1907,16 +1907,16 @@ int getSymbol() {
 
   } else if (character == CHAR_GT) {
     getCharacter();
-		
+
 			if (character == CHAR_GT){
 				getCharacter();
-		
+
 			symbol = SYM_RS;
     } else if (character == CHAR_EQUAL) {
       	getCharacter();
 
       	symbol = SYM_GEQ;
-    } else 
+    } else
       	symbol = SYM_GT;
 
   } else if (character == CHAR_EXCLAMATION) {
@@ -2114,7 +2114,7 @@ int isPlusOrMinus() {
 
 int isShiftOperator(){
 	if (symbol == SYM_LS)
-		return 1;	
+		return 1;
 	else if (symbol == SYM_RS)
 		return 1;
 	else
@@ -2809,37 +2809,36 @@ int gr_simpleExpression() {
 }
 
 int gr_shiftExpression() {
-    int ltype;
-    int operatorSymbol;
-    int rtype;
+  int ltype;
+  int operatorSymbol;
+  int rtype;
 
-    ltype = gr_simpleExpression();
+  ltype = gr_simpleExpression();
 
-	
-    if (isShiftOperator()) {
-        operatorSymbol = symbol;
+  if (isShiftOperator()) {
+    operatorSymbol = symbol;
 
-        getSymbol();
+    getSymbol();
 
-        rtype = gr_simpleExpression();
+    rtype = gr_simpleExpression();
 
-        if (ltype != rtype)
-            typeWarning(ltype, rtype);
+    if (ltype != rtype)
+      typeWarning(ltype, rtype);
 
-        if (operatorSymbol == SYM_LS) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLLV);
+      if (operatorSymbol == SYM_LS) {
+        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLLV);
 
-            tfree(1);
+        tfree(1);
 
-        } else if (operatorSymbol == SYM_RS) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRLV);
+      } else if (operatorSymbol == SYM_RS) {
+        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRLV);
 
-            tfree(1);
-    		}
+        tfree(1);
+    	}
 		}
 
     return ltype;
-	
+
 }
 
 
