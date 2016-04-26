@@ -2211,7 +2211,7 @@ int currentTemporary() {
   if (allocatedTemporaries > 0)
     return allocatedTemporaries + REG_A3;
   else {
-    syntaxErrorMessage((int*) "illegal register access");
+    syntaxErrorMessage((int*) "illegal register access cT");
 
     exit(-1);
   }
@@ -2221,7 +2221,7 @@ int previousTemporary() {
   if (allocatedTemporaries > 1)
     return currentTemporary() - 1;
   else {
-    syntaxErrorMessage((int*) "illegal register access");
+    syntaxErrorMessage((int*) "illegal register access pT");
 
     exit(-1);
   }
@@ -2653,7 +2653,7 @@ int gr_factor() {
   } else if (symbol == SYM_INTEGER) {
     //load_integer(literal);
 
-    foldedValue = symbol;
+    foldedValue = literal;
     foldable = 1;
 
     getSymbol();
