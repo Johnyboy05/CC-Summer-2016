@@ -275,6 +275,8 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_LS			 		 = 28; // << 
+int SYM_RS			 		 = 29; // >> 
 
 int* SYMBOLS; // array of strings representing symbols
 
@@ -306,7 +308,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -336,6 +338,8 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+	*(SYMBOLS + SYM_LS)						= (int)	"<<";
+	*(SYMBOLS + SYM_RS)						= (int) ">>";
 
   character = CHAR_EOF;
   symbol  = SYM_EOF;
@@ -1897,8 +1901,12 @@ int getSymbol() {
 
   } else if (character == CHAR_LT) {
     getCharacter();
-
-    if (character == CHAR_EQUAL) {
+		
+		if (character == CHAR_LT){
+			getCharacter();			
+	
+			symbol = SYM_LS;
+    } else if (character == CHAR_EQUAL) {
       getCharacter();
 
       symbol = SYM_LEQ;
@@ -1907,13 +1915,17 @@ int getSymbol() {
 
   } else if (character == CHAR_GT) {
     getCharacter();
+		
+			if (character == CHAR_GT){
+				getCharacter();
+		
+			symbol = SYM_RS;
+    } else if (character == CHAR_EQUAL) {
+      	getCharacter();
 
-    if (character == CHAR_EQUAL) {
-      getCharacter();
-
-      symbol = SYM_GEQ;
-    } else
-      symbol = SYM_GT;
+      	symbol = SYM_GEQ;
+    } else 
+      	symbol = SYM_GT;
 
   } else if (character == CHAR_EXCLAMATION) {
     getCharacter();
@@ -2106,6 +2118,15 @@ int isPlusOrMinus() {
     return 1;
   else
     return 0;
+}
+
+int isShiftOperator(){
+	if (symbol == SYM_LS)
+		return 1;	
+	else if (symbol == SYM_RS)
+		return 1;
+	else
+		return 0;
 }
 
 int isComparison() {
