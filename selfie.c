@@ -3001,8 +3001,8 @@ int gr_expression() {
       typeWarning(ltype, rtype);
 
     if (and(lFoldable, rFoldable)) {
-      load_integer(lFoldable);
-      load_integer(rFoldable);
+      load_integer(lFoldedValue);
+      load_integer(rFoldedValue);
     } else if (lFoldable) {
       int temp;
       temp = currentTemporary();
