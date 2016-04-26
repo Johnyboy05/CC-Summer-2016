@@ -302,6 +302,9 @@ int isINTMIN    = 0;
 int character; // most recently read character
 int symbol;    // most recently recognized symbol
 
+int foldable    = 0;
+int foldedValue = 0;
+
 int* sourceName = (int*) 0; // name of source file
 int  sourceFD   = 0;        // file descriptor of open source file
 
@@ -2640,7 +2643,10 @@ int gr_factor() {
 
   // integer?
   } else if (symbol == SYM_INTEGER) {
-    load_integer(literal);
+    //load_integer(literal);
+
+    foldedValue = symbol;
+    foldable = 1;
 
     getSymbol();
 
@@ -2689,10 +2695,16 @@ int gr_term() {
   int ltype;
   int operatorSymbol;
   int rtype;
+  int lFoldedValue;
+  int rFoldedValue;
+  int lFoldable;
+  int rFoldable;
 
   // assert: n = allocatedTemporaries
 
   ltype = gr_factor();
+  lFoldedValue = foldedValue;
+  lFoldable = foldable;
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2703,26 +2715,53 @@ int gr_term() {
     getSymbol();
 
     rtype = gr_factor();
+    rFoldedValue = foldedValue;
+    rFoldable = foldable;
 
     // assert: allocatedTemporaries == n + 2
 
     if (ltype != rtype)
       typeWarning(ltype, rtype);
 
-    if (operatorSymbol == SYM_ASTERISK) {
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+    if (lFoldable) {
+      if (rFoldable) {
+        if (operatorSymbol == SYM_ASTERISK) {
+          foldedValue = lFoldedValue * rFoldedValue;
+          foldable = 1;
+          lFoldedValue = foldedValue;
+          lFoldable = foldable;
+        } else if (operatorSymbol == SYM_DIV) {
+          foldedValue = lFoldedValue / rFoldedValue;
+          foldable = 1;
+          lFoldedValue = foldedValue;
+          lFoldable = foldable;
+        } else if (operatorSymbol == SYM_MOD) {
+          foldedValue = lFoldedValue % rFoldedValue;
+          foldable = 1;
+          lFoldedValue = foldedValue;
+          lFoldable = foldable;
+        }
+      } else {
+        if (lFo)
+        load_integer(foldedValue);
+        if (operatorSymbol == SYM_ASTERISK) {
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+          tfree(1);
 
-    } else if (operatorSymbol == SYM_DIV) {
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+        } else if (operatorSymbol == SYM_DIV) {
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+          tfree(1);
 
-    } else if (operatorSymbol == SYM_MOD) {
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+        } else if (operatorSymbol == SYM_MOD) {
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+          tfree(1);
+
+        }
+      }
     }
-
-    tfree(1);
   }
 
   // assert: allocatedTemporaries == n + 1
