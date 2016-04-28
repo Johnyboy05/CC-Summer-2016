@@ -2742,33 +2742,38 @@ int gr_term() {
       }
     } else {
 
-      int tempPrev;
-      int tempCurr;
-
       if (lFoldable) {
-        tempPrev = currentTemporary();
-        tempCurr = previousTemporary();
-      }
-      if (rFoldable) {
-        load_integer(rFoldedValue);
-        tempPrev = previousTemporary();
-        tempCurr = currentTemporary();
-      }
+        load_integer(lFoldedValue);
+        if (operatorSymbol == SYM_ASTERISK) {
+          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
 
-      if (ltype != rtype)
-        typeWarning(ltype, rtype);
+        } else if (operatorSymbol == SYM_DIV) {
+          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_DIVU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
 
-      if (operatorSymbol == SYM_ASTERISK) {
-        emitRFormat(OP_SPECIAL, tempPrev, tempCurr, 0, FCT_MULTU);
-        emitRFormat(OP_SPECIAL, 0, 0, tempPrev, FCT_MFLO);
+        } else if (operatorSymbol == SYM_MOD) {
+          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_DIVU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+        }
+      } else {
+        if (rFoldable)
+          load_integer(rFoldedValue);
+        if (ltype != rtype)
+          typeWarning(ltype, rtype);
 
-      } else if (operatorSymbol == SYM_DIV) {
-        emitRFormat(OP_SPECIAL, tempPrev, tempCurr, 0, FCT_DIVU);
-        emitRFormat(OP_SPECIAL, 0, 0, tempPrev, FCT_MFLO);
+        if (operatorSymbol == SYM_ASTERISK) {
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
 
-      } else if (operatorSymbol == SYM_MOD) {
-        emitRFormat(OP_SPECIAL, tempPrev, tempCurr, 0, FCT_DIVU);
-        emitRFormat(OP_SPECIAL, 0, 0, tempPrev, FCT_MFHI);
+        } else if (operatorSymbol == SYM_DIV) {
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+
+        } else if (operatorSymbol == SYM_MOD) {
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+        }
       }
       foldable = 0;
       foldedValue = 0;
@@ -2789,7 +2794,11 @@ int gr_simpleExpression() {
   int ltype;
   int operatorSymbol;
   int rtype;
-
+  int lFoldable;
+  int rFoldable;
+  int lFoldedValue;
+  int rFoldedValue;
+  
   // assert: n = allocatedTemporaries
 
   // optional: -
