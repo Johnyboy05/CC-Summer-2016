@@ -741,7 +741,7 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 131072; // 128KB
+int maxBinaryLength = 262144; // 256KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -2778,6 +2778,8 @@ int gr_term() {
     }
     lFoldable = foldable;
     lFoldedValue = foldedValue;
+    rFoldable = 0;
+    rFoldedValue = 0;
   }
 
   // assert: allocatedTemporaries == n + 1
@@ -2893,6 +2895,8 @@ int gr_simpleExpression() {
     }
     lFoldable = foldable;
     lFoldedValue = foldedValue;
+    rFoldable = 0;
+    rFoldedValue = 0;
   }
 
   // assert: allocatedTemporaries == n + 1
@@ -2961,6 +2965,8 @@ int gr_shiftExpression() {
     }
     lFoldable = foldable;
     lFoldedValue = foldedValue;
+    rFoldable = 0;
+    rFoldedValue = 0;
   }
 
   return ltype;
@@ -6868,6 +6874,10 @@ int main(int argc, int* argv) {
 
   print((int*) "This is SmileAndCompile Selfie");
   println();
+
+  int temp;
+  temp = 1 + 1;
+  print(itoa(temp, string_buffer, 10, 0, 0));
 
   if (selfie(argc, (int*) argv) != 0) {
     print(selfieName);
