@@ -23,6 +23,9 @@ type             = "int" [ "*" ] .
 
 cast             = "(" type ")" .
 
+>>>>>>>>"must be moved"<<<<<
+selector				= indetifier "[" expression "]" .
+
 call             = identifier "(" [ expression { "," expression } ] ")" .
 
 literal          = integer | "'" ascii_character "'" .
