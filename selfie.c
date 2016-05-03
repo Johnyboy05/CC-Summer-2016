@@ -115,7 +115,6 @@ int* malloc(int size);
 void exit(int code);
 
 int and(int case1, int case2);
-int or(int case1, int case2);
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int CHAR_EOF          = -1; // end of file
@@ -218,13 +217,6 @@ int and(int case1, int case2) {
   if (case1)
     return case2;
   return 0;
-}
-
-int or(int case1, int case2) {
-  if (case1)
-    return 1;
-  else
-    return case2;
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -2714,6 +2706,8 @@ int gr_term() {
   int rFoldable;
   int lFoldedValue;
   int rFoldedValue;
+  int prevTemp;
+  int currTemp;
 
   // assert: n = allocatedTemporaries
 
@@ -2750,6 +2744,16 @@ int gr_term() {
       }
     } else {
 
+      if (rFoldable) {
+        if (rFoldedValue >= 0)
+          load_integer(rFoldedValue);
+        else {
+          rFoldedValue = rFoldedValue * (-1);
+          load_integer(rFoldedValue);
+          emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
+          rFoldedValue = rFoldedValue * (-1);
+        }
+      }
       if (lFoldable) {
         if (lFoldedValue >= 0)
           load_integer(lFoldedValue);
@@ -2759,57 +2763,30 @@ int gr_term() {
           emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
           lFoldedValue = lFoldedValue * (-1);
         }
-        if (operatorSymbol == SYM_ASTERISK) {
-          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-
-        } else if (operatorSymbol == SYM_DIV) {
-          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_DIVU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-
-        } else if (operatorSymbol == SYM_MOD) {
-          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_DIVU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
-        }
+        prevTemp = currentTemporary();
+        currTemp = previousTemporary();
       } else {
-        if (rFoldable) {
-          if (rFoldedValue >= 0)
-            load_integer(rFoldedValue);
-          else {
-            rFoldedValue = rFoldedValue * (-1);
-            load_integer(rFoldedValue);
-            emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-            rFoldedValue = rFoldedValue * (-1);
-          }
-        }
+        prevTemp = previousTemporary();
+        currTemp = currentTemporary();
+      }
 
-        if (lFoldable) {
-          if (INT_T != rtype)
-            typeWarning(INT_T, rtype);
-        } else if (rFoldable) {
-          if (ltype != INT_T)
-            typeWarning(ltype, INT_T);
-        } else {
-          if (ltype != rtype)
-            typeWarning(ltype, rtype);
-        }
+      if (operatorSymbol == SYM_ASTERISK) {
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, 0, FCT_MULTU);
+        emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+        tfree(1);
 
-        if (operatorSymbol == SYM_ASTERISK) {
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+      } else if (operatorSymbol == SYM_DIV) {
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, 0, FCT_DIVU);
+        emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+        tfree(1);
 
-        } else if (operatorSymbol == SYM_DIV) {
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-
-        } else if (operatorSymbol == SYM_MOD) {
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
-        }
+      } else if (operatorSymbol == SYM_MOD) {
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, 0, FCT_DIVU);
+        emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+        tfree(1);
       }
       foldable = 0;
       foldedValue = 0;
-      tfree(1);
     }
     lFoldedValue = foldedValue;
     lFoldable = foldable;
@@ -2830,6 +2807,8 @@ int gr_simpleExpression() {
   int rFoldable;
   int lFoldedValue;
   int rFoldedValue;
+  int prevTemp;
+  int currTemp;
 
   // assert: n = allocatedTemporaries
 
@@ -2857,6 +2836,20 @@ int gr_simpleExpression() {
   ltype = gr_term();
   lFoldable = foldable;
   lFoldedValue = foldedValue;
+  foldable = 0;
+  foldedValue = 0;
+  if (lFoldable) {
+    if (lFoldedValue >= 0)
+      load_integer(lFoldedValue);
+    else {
+      lFoldedValue = lFoldedValue * (-1);
+      load_integer(lFoldedValue);
+      emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
+      lFoldedValue = lFoldedValue * (-1);
+    }
+  }
+  lFoldable = 0;
+  lFoldedValue = 0;
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2869,6 +2862,7 @@ int gr_simpleExpression() {
 
         ltype = INT_T;
       }
+
       emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
     }
   }
@@ -2884,8 +2878,6 @@ int gr_simpleExpression() {
     rtype = gr_term();
     rFoldable = foldable;
     rFoldedValue = foldedValue;
-    foldable = 0;
-    foldedValue = 0;
 
     // assert: allocatedTemporaries == n + 2
 
@@ -2899,6 +2891,17 @@ int gr_simpleExpression() {
       }
     } else {
 
+      if (rFoldable) {
+        if (rFoldedValue >= 0)
+          load_integer(rFoldedValue);
+        else {
+          rFoldedValue = rFoldedValue * (-1);
+          load_integer(rFoldedValue);
+          emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
+          rFoldedValue = rFoldedValue * (-1);
+        }
+      }
+
       if (lFoldable) {
         if (lFoldedValue >= 0)
           load_integer(lFoldedValue);
@@ -2908,89 +2911,36 @@ int gr_simpleExpression() {
           emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
           lFoldedValue = lFoldedValue * (-1);
         }
-        if (operatorSymbol == SYM_PLUS) {
-
-          if (lFoldable) {
-            if (INT_T != rtype)
-              typeWarning(INT_T, rtype);
-          } else if (rFoldable) {
-            if (ltype != INT_T)
-              typeWarning(ltype, INT_T);
-          } else {
-            if (ltype != rtype)
-              typeWarning(ltype, rtype);
-          }
-
-          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_ADDU);
-
-        } else if (operatorSymbol == SYM_MINUS) {
-          if (lFoldable) {
-            if (INT_T != rtype)
-              typeWarning(INT_T, rtype);
-          } else if (rFoldable) {
-            if (ltype != INT_T)
-              typeWarning(ltype, INT_T);
-          } else {
-            if (ltype != rtype)
-              typeWarning(ltype, rtype);
-          }
-
-          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_SUBU);
-        }
+        prevTemp = currentTemporary();
+        currTemp = previousTemporary();
       } else {
-        if (rFoldable) {
-          if (rFoldedValue >= 0)
-            load_integer(rFoldedValue);
-          else {
-            rFoldedValue = rFoldedValue * (-1);
-            load_integer(rFoldedValue);
-            emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-            rFoldedValue = rFoldedValue * (-1);
+        prevTemp = previousTemporary();
+        currTemp = currentTemporary();
+      }
+
+      if (operatorSymbol == SYM_PLUS) {
+        if (ltype == INTSTAR_T) {
+          if (rtype == INT_T) {
+            // pointer arithmetic: factor of 2^2 of integer operand
+            emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), twoToThePowerOf(2));
+            emitRFormat(OP_SPECIAL, currTemp, nextTemporary(), 0, FCT_MULTU);
+            emitRFormat(OP_SPECIAL, 0, 0, currTemp, FCT_MFLO);
           }
-        }
-        if (lFoldable) {
-          if (INT_T != rtype)
-            typeWarning(INT_T, rtype);
-        } else if (rFoldable) {
-          if (ltype != INT_T)
-            typeWarning(ltype, INT_T);
-        } else {
-          if (ltype != rtype)
-            typeWarning(ltype, rtype);
-        }
+        } else if (rtype == INTSTAR_T)
+          typeWarning(ltype, rtype);
 
-        if (operatorSymbol == SYM_PLUS) {
-          if (ltype == INTSTAR_T) {
-            if (or((rtype == INT_T),(rFoldable)))
-              // pointer arithmetic: factor of 2^2 of integer operand
-              emitLeftShiftBy(2);
-          } else if (and((rtype == INTSTAR_T), (rFoldable == 0))) {
-            if (lFoldable)
-              typeWarning(INT_T, rtype);
-            else
-              typeWarning(ltype, rtype);
-          }            
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_ADDU);
+        tfree(1);
 
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+      } else if (operatorSymbol == SYM_MINUS) {
+        if (ltype != rtype)
+          typeWarning(ltype, rtype);
 
-        } else if (operatorSymbol == SYM_MINUS) {
-          if (lFoldable) {
-            if (INT_T != rtype)
-              typeWarning(INT_T, rtype);
-          } else if (rFoldable) {
-            if (ltype != INT_T)
-              typeWarning(ltype, INT_T);
-          } else {
-            if (ltype != rtype)
-              typeWarning(ltype, rtype);
-          }
-
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
-        }
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SUBU);
+        tfree(1);
       }
       foldable = 0;
       foldedValue = 0;
-      tfree(1);
     }
     lFoldedValue = foldedValue;
     lFoldable = foldable;
@@ -3008,13 +2958,15 @@ int gr_shiftExpression() {
   int operatorSymbol;
   int rtype;
   int lFoldable;
-  int rFoldable;
   int lFoldedValue;
+  int rFoldable;
   int rFoldedValue;
 
   ltype = gr_simpleExpression();
   lFoldable = foldable;
   lFoldedValue = foldedValue;
+  foldable = 0;
+  foldedValue = 0;
   if (lFoldable) {
     if (lFoldedValue >= 0)
       load_integer(lFoldedValue);
@@ -3033,8 +2985,6 @@ int gr_shiftExpression() {
 
     getSymbol();
 
-    foldable = 0;
-    foldedValue = 0;
     rtype = gr_simpleExpression();
     rFoldable = foldable;
     rFoldedValue = foldedValue;
@@ -3056,19 +3006,19 @@ int gr_shiftExpression() {
     if (ltype != rtype)
       typeWarning(ltype, rtype);
 
-    if (operatorSymbol == SYM_LS) {
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLLV);
+      if (operatorSymbol == SYM_LS) {
+        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLLV);
 
-      tfree(1);
+        tfree(1);
 
-    } else if (operatorSymbol == SYM_RS) {
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRLV);
+      } else if (operatorSymbol == SYM_RS) {
+        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRLV);
 
-      tfree(1);
-  	}
-	}
+        tfree(1);
+    	}
+		}
 
-  return ltype;
+    return ltype;
 
 }
 
