@@ -23,8 +23,7 @@ type             = "int" [ "*" ] .
 
 cast             = "(" type ")" .
 
->>>>>>>>"must be moved"<<<<<
-selector				= indetifier "[" expression "]" .
+selector				= identifier "[" expression "]" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
 
