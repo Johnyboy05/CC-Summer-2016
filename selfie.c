@@ -2908,7 +2908,7 @@ int gr_shiftExpression() {
   tempFoldable = foldable;
   tempFoldedValue = foldedValue;
 
-  if (isShiftOperator()) {
+  while (isShiftOperator()) {
     operatorSymbol = symbol;
 
     getSymbol();
