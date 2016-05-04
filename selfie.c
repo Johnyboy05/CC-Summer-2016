@@ -141,6 +141,9 @@ int CHAR_EXCLAMATION  = '!';
 int CHAR_PERCENTAGE   = '%';
 int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
+int CHAR_LBRACKET  = '[';
+int CHAR_RBRACKET = ']';
+
 
 int SIZEOFINT     = 4; // must be the same as WORDSIZE
 int SIZEOFINTSTAR = 4; // must be the same as WORDSIZE
@@ -282,8 +285,10 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
-int SYM_LS			 		 = 28; // <<
-int SYM_RS			 		 = 29; // >>
+int SYM_LSHIFT			 		 = 28; // <<
+int SYM_RSHIFT			 		 = 29; // >>
+int SYM_LBRACKET     = 30; // [
+int SYM_RBRACKET     = 31; // ]
 
 int* SYMBOLS; // array of strings representing symbols
 
@@ -318,7 +323,7 @@ int foldedValue = 0;
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(32 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -348,8 +353,10 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
-	*(SYMBOLS + SYM_LS)						= (int)	"<<";
-	*(SYMBOLS + SYM_RS)						= (int) ">>";
+	*(SYMBOLS + SYM_LSHIFT)       = (int)	"<<";
+	*(SYMBOLS + SYM_RSHIFT)       = (int) ">>";
+  *(SYMBOLS + SYM_LBRACKET)     = (int) "[";
+	*(SYMBOLS + SYM_RBRACKET)     = (int) "]";
 
   character = CHAR_EOF;
   symbol  = SYM_EOF;
@@ -1897,6 +1904,16 @@ int getSymbol() {
 
     symbol = SYM_RBRACE;
 
+  } else if (character == CHAR_LBRACKET) {
+    getCharacter();
+
+    symbol = SYM_LBRACKET;
+
+  } else if (character == CHAR_RBRACKET) {
+    getCharacter();
+
+    symbol = SYM_RBRACKET;
+
   } else if (character == CHAR_COMMA) {
     getCharacter();
 
@@ -1908,7 +1925,7 @@ int getSymbol() {
 		if (character == CHAR_LT){
 			getCharacter();
 
-			symbol = SYM_LS;
+			symbol = SYM_LSHIFT;
     } else if (character == CHAR_EQUAL) {
       getCharacter();
 
@@ -1922,7 +1939,7 @@ int getSymbol() {
 			if (character == CHAR_GT){
 				getCharacter();
 
-			symbol = SYM_RS;
+			symbol = SYM_RSHIFT;
     } else if (character == CHAR_EQUAL) {
       	getCharacter();
 
@@ -2124,9 +2141,9 @@ int isPlusOrMinus() {
 }
 
 int isShiftOperator(){
-	if (symbol == SYM_LS)
+	if (symbol == SYM_LSHIFT)
 		return 1;
-	else if (symbol == SYM_RS)
+	else if (symbol == SYM_RSHIFT)
 		return 1;
 	else
 		return 0;
@@ -2919,9 +2936,9 @@ int gr_shiftExpression() {
       typeWarning(ltype, rtype);
 
     if (and(tempFoldable,foldable)) {
-      if (operatorSymbol == SYM_LS) {
+      if (operatorSymbol == SYM_LSHIFT) {
         tempFoldedValue = tempFoldedValue << foldedValue;
-      } else if (operatorSymbol == SYM_RS) {
+      } else if (operatorSymbol == SYM_RSHIFT) {
         tempFoldedValue = tempFoldedValue >> foldedValue;
       }
     } else {
@@ -2937,9 +2954,9 @@ int gr_shiftExpression() {
         currTemp = currentTemporary();
       }
 
-      if (operatorSymbol == SYM_LS)
+      if (operatorSymbol == SYM_LSHIFT)
         emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SLLV);
-      else if (operatorSymbol == SYM_RS)
+      else if (operatorSymbol == SYM_RSHIFT)
         emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SRLV);
 
       tfree(1);
