@@ -2675,6 +2675,15 @@ int gr_factor() {
 
       // reset return register
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+    } else if (symbol == LBRACKET) {
+      getSymbol();
+
+      if (symbol == SYM_INTEGER) {
+        // TODO: Größe des Arrays = literal;
+        // TODO: .....
+
+      }
+    }
     } else
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
