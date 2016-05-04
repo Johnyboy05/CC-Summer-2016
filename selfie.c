@@ -463,6 +463,7 @@ void typeWarning(int expected, int found);
 int* getVariable(int* variable);
 int  load_variable(int* variable);
 void load_integer(int value);
+void load_integerNeg(int value);
 void load_string(int* string);
 
 int  help_call_codegen(int* entry, int* procedure);
@@ -2386,6 +2387,16 @@ void load_integer(int value) {
   }
 }
 
+void load_integerNeg(int value) {
+  if (value >= 0)
+    load_integer(value);
+  else {
+    value = value * (-1);
+    load_integer(value);
+    emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
+  }
+}
+
 void load_string(int* string) {
   int length;
 
@@ -2551,6 +2562,9 @@ int gr_factor() {
 
   // assert: n = allocatedTemporaries
 
+  foldable = 0;
+  foldedValue = 0;
+
   hasCast = 0;
 
   type = INT_T;
@@ -2702,18 +2716,16 @@ int gr_term() {
   int ltype;
   int operatorSymbol;
   int rtype;
-  int lFoldable;
-  int rFoldable;
-  int lFoldedValue;
-  int rFoldedValue;
+  int tempFoldable;
+  int tempFoldedValue;
   int prevTemp;
   int currTemp;
 
   // assert: n = allocatedTemporaries
 
   ltype = gr_factor();
-  lFoldable = foldable;
-  lFoldedValue = foldedValue;
+  tempFoldable = foldable;
+  tempFoldedValue = foldedValue;
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2723,46 +2735,23 @@ int gr_term() {
 
     getSymbol();
 
-    foldable = 0;
-    foldedValue = 0;
     rtype = gr_factor();
-    rFoldable = foldable;
-    rFoldedValue = foldedValue;
 
     // assert: allocatedTemporaries == n + 2
 
-    if (and(lFoldable,rFoldable)) {
-      if (operatorSymbol == SYM_ASTERISK) {
-        foldedValue = lFoldedValue * rFoldedValue;
-        foldable = 1;
-      } else if (operatorSymbol == SYM_DIV) {
-        foldedValue = lFoldedValue / rFoldedValue;
-        foldable = 1;
-      } else if (operatorSymbol == SYM_MOD) {
-        foldedValue = lFoldedValue % rFoldedValue;
-        foldable = 1;
-      }
+    if (and(tempFoldable,foldable)) {
+      if (operatorSymbol == SYM_ASTERISK)
+        tempFoldedValue = tempFoldedValue * foldedValue;
+      else if (operatorSymbol == SYM_DIV)
+        tempFoldedValue = tempFoldedValue / foldedValue;
+      else if (operatorSymbol == SYM_MOD)
+        tempFoldedValue = tempFoldedValue % foldedValue;
     } else {
 
-      if (rFoldable) {
-        if (rFoldedValue >= 0)
-          load_integer(rFoldedValue);
-        else {
-          rFoldedValue = rFoldedValue * (-1);
-          load_integer(rFoldedValue);
-          emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-          rFoldedValue = rFoldedValue * (-1);
-        }
-      }
-      if (lFoldable) {
-        if (lFoldedValue >= 0)
-          load_integer(lFoldedValue);
-        else {
-          lFoldedValue = lFoldedValue * (-1);
-          load_integer(lFoldedValue);
-          emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-          lFoldedValue = lFoldedValue * (-1);
-        }
+      if (foldable)
+        load_integerNeg(foldedValue);
+      if (tempFoldable) {
+        load_integerNeg(tempFoldedValue);
         prevTemp = currentTemporary();
         currTemp = previousTemporary();
       } else {
@@ -2773,26 +2762,23 @@ int gr_term() {
       if (operatorSymbol == SYM_ASTERISK) {
         emitRFormat(OP_SPECIAL, prevTemp, currTemp, 0, FCT_MULTU);
         emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-        tfree(1);
 
       } else if (operatorSymbol == SYM_DIV) {
         emitRFormat(OP_SPECIAL, prevTemp, currTemp, 0, FCT_DIVU);
         emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-        tfree(1);
 
       } else if (operatorSymbol == SYM_MOD) {
         emitRFormat(OP_SPECIAL, prevTemp, currTemp, 0, FCT_DIVU);
         emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
-        tfree(1);
       }
-      foldable = 0;
-      foldedValue = 0;
+      tfree(1);
+      tempFoldable = 0;
     }
-    lFoldedValue = foldedValue;
-    lFoldable = foldable;
-    rFoldable = 0;
-    rFoldedValue = 0;
   }
+
+  foldable = tempFoldable;
+  foldedValue = tempFoldedValue;
+
   // assert: allocatedTemporaries == n + 1
 
   return ltype;
@@ -2803,10 +2789,8 @@ int gr_simpleExpression() {
   int ltype;
   int operatorSymbol;
   int rtype;
-  int lFoldable;
-  int rFoldable;
-  int lFoldedValue;
-  int rFoldedValue;
+  int tempFoldable;
+  int tempFoldedValue;
   int prevTemp;
   int currTemp;
 
@@ -2834,28 +2818,14 @@ int gr_simpleExpression() {
     sign = 0;
 
   ltype = gr_term();
-  lFoldable = foldable;
-  lFoldedValue = foldedValue;
-  foldable = 0;
-  foldedValue = 0;
-  if (lFoldable) {
-    if (lFoldedValue >= 0)
-      load_integer(lFoldedValue);
-    else {
-      lFoldedValue = lFoldedValue * (-1);
-      load_integer(lFoldedValue);
-      emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-      lFoldedValue = lFoldedValue * (-1);
-    }
-  }
-  lFoldable = 0;
-  lFoldedValue = 0;
+  tempFoldable = foldable;
+  tempFoldedValue = foldedValue;
 
   // assert: allocatedTemporaries == n + 1
 
   if (sign) {
-    if (lFoldable)
-      lFoldedValue = 0 - lFoldedValue;
+    if (tempFoldable)
+      tempFoldedValue = tempFoldedValue * (-1);
     else {
       if (ltype != INT_T) {
         typeWarning(INT_T, ltype);
@@ -2873,44 +2843,25 @@ int gr_simpleExpression() {
 
     getSymbol();
 
-    foldable = 0;
-    foldedValue = 0;
     rtype = gr_term();
-    rFoldable = foldable;
-    rFoldedValue = foldedValue;
 
     // assert: allocatedTemporaries == n + 2
 
-    if (and(lFoldable,rFoldable)) {
+    if (and(tempFoldable,foldable)) {
       if (operatorSymbol == SYM_PLUS) {
-        foldedValue = lFoldedValue + rFoldedValue;
-        foldable = 1;
+        if (ltype == INTSTAR_T)
+          if (rtype == INT_T)
+            foldedValue = foldedValue << 2;
+        tempFoldedValue = tempFoldedValue + foldedValue;
       } else if (operatorSymbol == SYM_MINUS) {
-        foldedValue = lFoldedValue - rFoldedValue;
-        foldable = 1;
+        tempFoldedValue = tempFoldedValue - foldedValue;
       }
     } else {
 
-      if (rFoldable) {
-        if (rFoldedValue >= 0)
-          load_integer(rFoldedValue);
-        else {
-          rFoldedValue = rFoldedValue * (-1);
-          load_integer(rFoldedValue);
-          emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-          rFoldedValue = rFoldedValue * (-1);
-        }
-      }
-
-      if (lFoldable) {
-        if (lFoldedValue >= 0)
-          load_integer(lFoldedValue);
-        else {
-          lFoldedValue = lFoldedValue * (-1);
-          load_integer(lFoldedValue);
-          emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-          lFoldedValue = lFoldedValue * (-1);
-        }
+      if (foldable)
+        load_integerNeg(foldedValue);
+      if (tempFoldable) {
+        load_integerNeg(tempFoldedValue);
         prevTemp = currentTemporary();
         currTemp = previousTemporary();
       } else {
@@ -2926,27 +2877,18 @@ int gr_simpleExpression() {
             emitRFormat(OP_SPECIAL, currTemp, nextTemporary(), 0, FCT_MULTU);
             emitRFormat(OP_SPECIAL, 0, 0, currTemp, FCT_MFLO);
           }
-        } else if (rtype == INTSTAR_T)
-          typeWarning(ltype, rtype);
-
+        }
         emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_ADDU);
-        tfree(1);
-
       } else if (operatorSymbol == SYM_MINUS) {
-        if (ltype != rtype)
-          typeWarning(ltype, rtype);
-
         emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SUBU);
-        tfree(1);
       }
-      foldable = 0;
-      foldedValue = 0;
+      tfree(1);
+      tempFoldable = 0;
     }
-    lFoldedValue = foldedValue;
-    lFoldable = foldable;
-    rFoldable = 0;
-    rFoldedValue = 0;
   }
+
+  foldable = tempFoldable;
+  foldedValue = tempFoldedValue;
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2957,28 +2899,14 @@ int gr_shiftExpression() {
   int ltype;
   int operatorSymbol;
   int rtype;
-  int lFoldable;
-  int lFoldedValue;
-  int rFoldable;
-  int rFoldedValue;
+  int tempFoldable;
+  int tempFoldedValue;
+  int prevTemp;
+  int currTemp;
 
   ltype = gr_simpleExpression();
-  lFoldable = foldable;
-  lFoldedValue = foldedValue;
-  foldable = 0;
-  foldedValue = 0;
-  if (lFoldable) {
-    if (lFoldedValue >= 0)
-      load_integer(lFoldedValue);
-    else {
-      lFoldedValue = lFoldedValue * (-1);
-      load_integer(lFoldedValue);
-      emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-      lFoldedValue = lFoldedValue * (-1);
-    }
-  }
-  lFoldable = 0;
-  lFoldedValue = 0;
+  tempFoldable = foldable;
+  tempFoldedValue = foldedValue;
 
   if (isShiftOperator()) {
     operatorSymbol = symbol;
@@ -2986,42 +2914,45 @@ int gr_shiftExpression() {
     getSymbol();
 
     rtype = gr_simpleExpression();
-    rFoldable = foldable;
-    rFoldedValue = foldedValue;
-    if (rFoldable) {
-      if (rFoldedValue >= 0)
-        load_integer(rFoldedValue);
-      else {
-        rFoldedValue = rFoldedValue * (-1);
-        load_integer(rFoldedValue);
-        emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
-        rFoldedValue = rFoldedValue * (-1);
-      }
-    }
-    rFoldable = 0;
-    rFoldedValue = 0;
-    foldable = 0;
-    foldedValue = 0;
 
     if (ltype != rtype)
       typeWarning(ltype, rtype);
 
+    if (and(tempFoldable,foldable)) {
       if (operatorSymbol == SYM_LS) {
-        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLLV);
-
-        tfree(1);
-
+        tempFoldedValue = tempFoldedValue << foldedValue;
       } else if (operatorSymbol == SYM_RS) {
-        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SRLV);
+        tempFoldedValue = tempFoldedValue >> foldedValue;
+      }
+    } else {
 
-        tfree(1);
-    	}
-		}
+      if (foldable)
+        load_integerNeg(foldedValue);
+      if (tempFoldable) {
+        load_integerNeg(tempFoldedValue);
+        prevTemp = currentTemporary();
+        currTemp = previousTemporary();
+      } else {
+        prevTemp = previousTemporary();
+        currTemp = currentTemporary();
+      }
 
-    return ltype;
+      if (operatorSymbol == SYM_LS)
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SLLV);
+      else if (operatorSymbol == SYM_RS)
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SRLV);
+
+      tfree(1);
+      tempFoldable = 0;
+    }
+  }
+
+  foldable = tempFoldable;
+  foldedValue = tempFoldedValue;
+
+  return ltype;
 
 }
-
 
 int gr_expression() {
   int ltype;
@@ -3031,6 +2962,8 @@ int gr_expression() {
   // assert: n = allocatedTemporaries
 
   ltype = gr_shiftExpression();
+  if (foldable)
+    load_integerNeg(foldedValue);
 
   // assert: allocatedTemporaries == n + 1
 
@@ -3041,6 +2974,8 @@ int gr_expression() {
     getSymbol();
 
     rtype = gr_shiftExpression();
+    if (foldable)
+      load_integerNeg(foldedValue);
 
     // assert: allocatedTemporaries == n + 2
 
@@ -3104,6 +3039,8 @@ int gr_expression() {
       emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
     }
   }
+
+  foldable = 0;
 
   // assert: allocatedTemporaries == n + 1
 
@@ -6883,6 +6820,14 @@ int selfie(int argc, int* argv) {
 }
 
 int main(int argc, int* argv) {
+  int add;
+  int sub;
+  int mult;
+  int divi;
+  int mod;
+  int ls;
+  int rs;
+
   initLibrary();
 
   initScanner();
@@ -6896,6 +6841,29 @@ int main(int argc, int* argv) {
 
   argc = argc - 1;
   argv = argv + 1;
+
+  add = 2 + 2;
+  sub = 6 - 2;
+  mult = 2 * 2;
+  divi = 8 / 2;
+  mod = 9 % 5;
+  ls = 2 << 1;
+  rs = 4 >> 1;
+
+  print(itoa(add, string_buffer, 10, 0, 0));
+  println();
+  print(itoa(sub, string_buffer, 10, 0, 0));
+  println();
+  print(itoa(mult, string_buffer, 10, 0, 0));
+  println();
+  print(itoa(divi, string_buffer, 10, 0, 0));
+  println();
+  print(itoa(mod, string_buffer, 10, 0, 0));
+  println();
+  print(itoa(ls, string_buffer, 10, 0, 0));
+  println();
+  print(itoa(rs, string_buffer, 10, 0, 0));
+  println();
 
   print((int*) "This is SmileAndCompile Selfie");
   println();
