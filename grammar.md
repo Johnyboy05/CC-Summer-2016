@@ -30,7 +30,7 @@ call             = identifier "(" [ expression { "," expression } ] ")" .
 literal          = integer | "'" ascii_character "'" .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
+                    ( [ "*" ] ( identifier [ "[" expression "]" ] | "(" expression ")" ) |
                       call |
                       literal |
                       """ { ascii_character } """ ) .
@@ -63,7 +63,7 @@ statement        = ( [ "*" ] identifier | "*" "(" expression ")" ) "="
                     if |
                     return ";" .
 
-variable         = type identifier .
+variable         = type ( identifier | selector ) .
 
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
