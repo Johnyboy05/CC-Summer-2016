@@ -30,7 +30,7 @@ call             = identifier "(" [ expression { "," expression } ] ")" .
 literal          = integer | "'" ascii_character "'" .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | selector | "(" expression ")" ) |
+                    ( [ "*" ] ( ( identifier | selector ) | "(" expression ")" ) |
                       call |
                       literal |
                       """ { ascii_character } """ ) .
@@ -68,6 +68,6 @@ variable         = type ( identifier | selector ) .
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
-cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
+cstar            = { variable [ "=" [ cast ] [ "-" ] literal ] ";" |
                    ( "void" | type ) identifier procedure } .
 ```
