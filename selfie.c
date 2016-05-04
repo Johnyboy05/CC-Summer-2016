@@ -141,8 +141,8 @@ int CHAR_EXCLAMATION  = '!';
 int CHAR_PERCENTAGE   = '%';
 int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
-int CHAR_LBRACKET  = '[';
-int CHAR_RBRACKET = ']';
+int CHAR_LBRACKET     = '[';
+int CHAR_RBRACKET     = ']';
 
 
 int SIZEOFINT     = 4; // must be the same as WORDSIZE
@@ -285,8 +285,8 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
-int SYM_LSHIFT			 		 = 28; // <<
-int SYM_RSHIFT			 		 = 29; // >>
+int SYM_LSHIFT			 = 28; // <<
+int SYM_RSHIFT			 = 29; // >>
 int SYM_LBRACKET     = 30; // [
 int SYM_RBRACKET     = 31; // ]
 
@@ -477,6 +477,7 @@ int  help_call_codegen(int* entry, int* procedure);
 void help_procedure_prologue(int localVariables);
 void help_procedure_epilogue(int parameters);
 
+int  gr_selector();
 int  gr_call(int* procedure);
 int  gr_factor();
 int  gr_term();
@@ -1962,7 +1963,16 @@ int getSymbol() {
 
     symbol = SYM_MOD;
 
-  } else {
+  } else if (character == CHAR_RBRACKET) {
+      getCharacter();
+
+      symbol = SYM_RBRACKET;
+
+  }else if (character == CHAR_LBRACKET) {
+    getCharacter();
+
+    symbol = SYM_LBRACKET;
+  }else{
     printLineNumber((int*) "error", lineNumber);
     print((int*) "found unknown character ");
     printCharacter(character);
