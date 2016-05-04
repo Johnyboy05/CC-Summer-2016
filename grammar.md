@@ -23,7 +23,7 @@ type             = "int" [ "*" ] .
 
 cast             = "(" type ")" .
 
-selector				= identifier "[" expression "]" .
+selector         = identifier "[" expression "]" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
 
