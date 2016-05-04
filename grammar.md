@@ -30,7 +30,7 @@ call             = identifier "(" [ expression { "," expression } ] ")" .
 literal          = integer | "'" ascii_character "'" .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier [ "[" expression "]" ] | "(" expression ")" ) |
+                    ( [ "*" ] ( identifier | selector | "(" expression ")" ) |
                       call |
                       literal |
                       """ { ascii_character } """ ) .
