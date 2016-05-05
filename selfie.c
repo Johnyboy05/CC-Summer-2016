@@ -3299,6 +3299,7 @@ void gr_return(int returnType) {
 void gr_statement() {
   int ltype;
   int rtype;
+  int arrayIndex;
   int* variableOrProcedureName;
   int* entry;
 
@@ -3423,6 +3424,36 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
+
+    // identifier selector = expression
+    } else if (symbol == SYM_LBRACKET) {
+      getSymbol();
+
+      arrayIndex = gr_selector();
+
+      if (symbol == SYM_ASSIGN) {
+        entry = getVariable(variableOrProcedureName);
+
+        ltype = getType(entry);
+
+        getSymbol();
+
+        rtype = gr_expression();
+
+        if (ltype != rtype)
+          typeWarning(ltype, rtype);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry) + (arrayIndex * WORDSIZE));
+
+        tfree(1);
+
+        if (symbol == SYM_SEMICOLON)
+          getSymbol();
+        else
+          syntaxErrorSymbol(SYM_SEMICOLON);
+      } else
+        syntaxErrorSymbol(SYM_ASSIGN);
+
     } else
       syntaxErrorUnexpected();
   }
