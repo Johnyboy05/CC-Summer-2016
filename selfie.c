@@ -2531,7 +2531,9 @@ int gr_selector() {
   // TODO: if (foldable != 1) then fire runtime error
   // TODO: return foldedValue;
 
-  return 10;
+  // at the moment constant folding for expressions does not work.
+  // as workaround we temporary declare each array with a size of 32
+  return 32;
 }
 
 int gr_call(int* procedure) {
@@ -2679,8 +2681,9 @@ int gr_factor() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_RPARENTHESIS);
-    } else
+    } else {
       syntaxErrorUnexpected();
+    }
 
     if (type != INTSTAR_T)
       typeWarning(INTSTAR_T, type);
@@ -2760,8 +2763,9 @@ int gr_factor() {
       getSymbol();
     else
       syntaxErrorSymbol(SYM_RPARENTHESIS);
-  } else
+  } else {
     syntaxErrorUnexpected();
+  }
 
   // assert: allocatedTemporaries == n + 1
 
@@ -3413,9 +3417,9 @@ void gr_statement() {
 
       rtype = gr_expression();
 
-      if (ltype != rtype)
+      if (ltype != rtype){
         typeWarning(ltype, rtype);
-
+      }
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
       tfree(1);
@@ -3440,9 +3444,9 @@ void gr_statement() {
 
         rtype = gr_expression();
 
-        if (ltype != rtype)
+        if (ltype != rtype){
           typeWarning(ltype, rtype);
-
+        }
         emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry) + (arrayIndex * WORDSIZE));
 
         tfree(1);
@@ -3454,8 +3458,9 @@ void gr_statement() {
       } else
         syntaxErrorSymbol(SYM_ASSIGN);
 
-    } else
+    } else {
       syntaxErrorUnexpected();
+    }
   }
   // while statement?
   else if (symbol == SYM_WHILE) {
@@ -3510,8 +3515,12 @@ void gr_variable(int offset) {
     getSymbol();
 
     if (symbol == SYM_LBRACKET) {
+      getSymbol();
+
       size = gr_selector();
     }
+
+    allocatedMemory = allocatedMemory + size * WORDSIZE;
 
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, size);
 
@@ -3579,8 +3588,9 @@ void gr_initialization(int* name, int offset, int type) {
 
       if (sign)
         initialValue = -initialValue;
-    } else
+    } else {
       syntaxErrorUnexpected();
+    }
 
     if (symbol == SYM_SEMICOLON)
       getSymbol();
@@ -3721,8 +3731,9 @@ void gr_procedure(int* procedure, int returnType) {
 
     help_procedure_epilogue(numberOfParameters);
 
-  } else
+  } else {
     syntaxErrorUnexpected();
+  }
 
   local_symbol_table = (int*) 0;
 
