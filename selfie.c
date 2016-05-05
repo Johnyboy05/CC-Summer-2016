@@ -753,7 +753,7 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 262142; // 256KB
+int maxBinaryLength = 131072; // 128KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -3301,7 +3301,6 @@ void gr_statement() {
   int rtype;
   int* variableOrProcedureName;
   int* entry;
-  int arrayIndex;
 
   // assert: allocatedTemporaries == 0;
 
@@ -6915,3 +6914,4 @@ int main(int argc, int* argv) {
 
   return 0;
 }
+
