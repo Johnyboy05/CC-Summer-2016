@@ -3302,7 +3302,6 @@ void gr_statement() {
   int arrayIndex;
   int* variableOrProcedureName;
   int* entry;
-  int* array_entry;
 
   // assert: allocatedTemporaries == 0;
 
