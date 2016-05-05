@@ -56,8 +56,8 @@ if               = "if" "(" expression ")"
 
 return           = "return" [ expression ] .
 
-statement        = ( [ "*" ] identifier | "*" "(" expression ")" ) "="
-                      expression ";" |
+statement        = ( [ "*" ] identifier | ( ( "*" "(" expression ")" ) | ( identifier selector ) ) ) "="
+                      expression | ( identifier selector ) ";" |
                     call ";" |
                     while |
                     if |
@@ -71,4 +71,3 @@ procedure        = "(" [ variable { "," variable } ] ")"
 cstar            = { variable [ "=" [ cast ] [ "-" ] literal ] ";" |
                    ( "void" | type ) identifier procedure } .
 ```
-
