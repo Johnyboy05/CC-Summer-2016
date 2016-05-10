@@ -3412,7 +3412,7 @@ void gr_statement() {
 
       if (ltype != rtype)
         typeWarning(ltype, rtype);
-        
+
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
       tfree(1);
@@ -6954,8 +6954,6 @@ int main(int argc, int* argv) {
   a[0] = 3;
   a[1] = 4;
   a[2] = 5;
-  a[5] = 2;
-  temp2 = a[5];
 
   print(itoa(a[0], string_buffer, 10, 0, 0));
   println();
