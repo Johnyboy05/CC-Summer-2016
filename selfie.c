@@ -6919,7 +6919,9 @@ int selfie(int argc, int* argv) {
 
 int main(int argc, int* argv) {
 
-  int a[3];
+  int temp1;
+  int temp2;
+  int temp3;
 
   initLibrary();
 
@@ -6935,15 +6937,15 @@ int main(int argc, int* argv) {
   argc = argc - 1;
   argv = argv + 1;
 
-  a[0] = 3;
-  a[1] = 4;
-  a[4 >> 1] = 5;
+  temp1 = 1;
+  temp2 = 2;
+  temp3 = 3;
 
-  print(itoa(a[0], string_buffer, 10, 0, 0));
+  print(itoa(temp1, string_buffer, 10, 0, 0));
   println();
-  print(itoa(a[1], string_buffer, 10, 0, 0));
+  print(itoa(temp2, string_buffer, 10, 0, 0));
   println();
-  print(itoa(a[2], string_buffer, 10, 0, 0));
+  print(itoa(temp3, string_buffer, 10, 0, 0));
   println();
 
   print((int*) "This is SmileAndCompile Selfie");
