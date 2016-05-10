@@ -3017,8 +3017,10 @@ int gr_expression() {
   int rtype;
 
   ltype = gr_shiftExpression();
-  if (foldable)
+  if (foldable) {
     load_integerNeg(foldedValue);
+    foldable = 0;
+  }
 
   //optional: ==, !=, <, >, <=, >= simpleExpression
   if (isComparison()) {
@@ -3027,8 +3029,10 @@ int gr_expression() {
     getSymbol();
 
     rtype = gr_shiftExpression();
-    if (foldable)
+    if (foldable) {
       load_integerNeg(foldedValue);
+      foldable = 0;
+    }
 
     if (ltype != rtype)
       typeWarning(ltype, rtype);
