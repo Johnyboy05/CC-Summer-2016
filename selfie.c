@@ -2373,6 +2373,11 @@ int load_arrayEntry(int* variable, int index) {
 
   entry = getVariable(variable);
 
+  if (index >= getSize(entry)) {
+    syntaxErrorMessage("index out of bounds");
+    exit(1);
+  }
+
   talloc();
 
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry) + (index * WORDSIZE));
@@ -3405,9 +3410,9 @@ void gr_statement() {
 
       rtype = gr_expression();
 
-      if (ltype != rtype){
+      if (ltype != rtype)
         typeWarning(ltype, rtype);
-      }
+        
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
       tfree(1);
@@ -3425,6 +3430,11 @@ void gr_statement() {
 
       if (symbol == SYM_ASSIGN) {
         entry = getVariable(variableOrProcedureName);
+
+        if (arrayIndex >= getSize(entry)) {
+          syntaxErrorMessage("index out of bounds");
+          exit(1);
+        }
 
         ltype = getType(entry);
 
@@ -6919,6 +6929,7 @@ int selfie(int argc, int* argv) {
 
 int main(int argc, int* argv) {
 
+  int a[3];
   int temp1;
   int temp2;
   int temp3;
@@ -6937,15 +6948,20 @@ int main(int argc, int* argv) {
   argc = argc - 1;
   argv = argv + 1;
 
-  temp1 = 1;
-  temp2 = 2;
-  temp3 = 3;
+  temp1 = 0;
+  temp2 = 1;
+  temp3 = 2;
+  a[0] = 3;
+  a[1] = 4;
+  a[2] = 5;
+  a[5] = 2;
+  temp2 = a[5];
 
-  print(itoa(temp1, string_buffer, 10, 0, 0));
+  print(itoa(a[0], string_buffer, 10, 0, 0));
   println();
-  print(itoa(temp2, string_buffer, 10, 0, 0));
+  print(itoa(a[1], string_buffer, 10, 0, 0));
   println();
-  print(itoa(temp3, string_buffer, 10, 0, 0));
+  print(itoa(a[2], string_buffer, 10, 0, 0));
   println();
 
   print((int*) "This is SmileAndCompile Selfie");
