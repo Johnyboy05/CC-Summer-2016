@@ -2841,9 +2841,8 @@ int gr_term() {
   foldable = tempFoldable;
   foldedValue = tempFoldedValue;
 
-  // assert: allocatedTemporaries == n + 1
-
   return ltype;
+
 }
 
 int gr_simpleExpression() {
@@ -2855,8 +2854,6 @@ int gr_simpleExpression() {
   int tempFoldedValue;
   int prevTemp;
   int currTemp;
-
-  // assert: n = allocatedTemporaries
 
   // optional: -
   if (symbol == SYM_MINUS) {
@@ -2952,8 +2949,6 @@ int gr_simpleExpression() {
   foldable = tempFoldable;
   foldedValue = tempFoldedValue;
 
-  // assert: allocatedTemporaries == n + 1
-
   return ltype;
 }
 
@@ -3021,13 +3016,9 @@ int gr_expression() {
   int operatorSymbol;
   int rtype;
 
-  // assert: n = allocatedTemporaries
-
   ltype = gr_shiftExpression();
   if (foldable)
     load_integerNeg(foldedValue);
-
-  // assert: allocatedTemporaries == n + 1
 
   //optional: ==, !=, <, >, <=, >= simpleExpression
   if (isComparison()) {
@@ -3038,8 +3029,6 @@ int gr_expression() {
     rtype = gr_shiftExpression();
     if (foldable)
       load_integerNeg(foldedValue);
-
-    // assert: allocatedTemporaries == n + 2
 
     if (ltype != rtype)
       typeWarning(ltype, rtype);
@@ -6930,6 +6919,8 @@ int selfie(int argc, int* argv) {
 
 int main(int argc, int* argv) {
 
+  int a[3];
+
   initLibrary();
 
   initScanner();
@@ -6943,6 +6934,17 @@ int main(int argc, int* argv) {
 
   argc = argc - 1;
   argv = argv + 1;
+
+  a[0] = 3;
+  a[1] = 4;
+  a[4 >> 1] = 5;
+
+  print(itoa(a[0], string_buffer, 10, 0, 0));
+  println();
+  print(itoa(a[1], string_buffer, 10, 0, 0));
+  println();
+  print(itoa(a[2], string_buffer, 10, 0, 0));
+  println();
 
   print((int*) "This is SmileAndCompile Selfie");
   println();
