@@ -2521,19 +2521,18 @@ void help_procedure_epilogue(int parameters) {
 
 int gr_selector() {
 
-	gr_expression();
+	gr_shiftExpression();
+
+  if (foldable == 0)
+    syntaxErrorMessage("array size or index is not computable");
 
   if (symbol != SYM_RBRACKET)
 	  syntaxErrorMessage("missing right bracket");
 
   getSymbol();
 
-  // TODO: if (foldable != 1) then fire runtime error
-  // TODO: return foldedValue;
+  return foldedValue;
 
-  // at the moment constant folding for expressions does not work.
-  // as workaround we temporary declare each array with a size of 32
-  return 32;
 }
 
 int gr_call(int* procedure) {
