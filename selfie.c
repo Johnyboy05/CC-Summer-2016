@@ -2374,7 +2374,7 @@ int load_arrayEntry(int* variable, int index) {
   entry = getVariable(variable);
 
   if (index >= getSize(entry)) {
-    syntaxErrorMessage("index out of bounds");
+    syntaxErrorMessage((int*) "index out of bounds");
     exit(1);
   }
 
@@ -2529,10 +2529,10 @@ int gr_selector() {
 	gr_shiftExpression();
 
   if (foldable == 0)
-    syntaxErrorMessage("array size or index is not computable");
+    syntaxErrorMessage((int*) "array size or index is not computable");
 
   if (symbol != SYM_RBRACKET)
-	  syntaxErrorMessage("missing right bracket");
+	  syntaxErrorMessage((int*) "missing right bracket");
 
   getSymbol();
 
@@ -3432,7 +3432,7 @@ void gr_statement() {
         entry = getVariable(variableOrProcedureName);
 
         if (arrayIndex >= getSize(entry)) {
-          syntaxErrorMessage("index out of bounds");
+          syntaxErrorMessage((int*) "index out of bounds");
           exit(1);
         }
 
@@ -6929,11 +6929,6 @@ int selfie(int argc, int* argv) {
 
 int main(int argc, int* argv) {
 
-  int a[3];
-  int temp1;
-  int temp2;
-  int temp3;
-
   initLibrary();
 
   initScanner();
@@ -6947,20 +6942,6 @@ int main(int argc, int* argv) {
 
   argc = argc - 1;
   argv = argv + 1;
-
-  temp1 = 0;
-  temp2 = 1;
-  temp3 = 2;
-  a[0] = 3;
-  a[1] = 4;
-  a[2] = 5;
-
-  print(itoa(a[0], string_buffer, 10, 0, 0));
-  println();
-  print(itoa(a[1], string_buffer, 10, 0, 0));
-  println();
-  print(itoa(a[2], string_buffer, 10, 0, 0));
-  println();
 
   print((int*) "This is SmileAndCompile Selfie");
   println();
