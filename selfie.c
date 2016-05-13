@@ -2381,8 +2381,7 @@ int load_arrayEntry(int* variable, int index) {
   talloc();
 
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry) + (index * WORDSIZE));
-	
-	tfree(1);
+
   return getType(entry);
 }
 
@@ -2976,7 +2975,6 @@ int gr_shiftExpression() {
 
     getSymbol();
 
-
     rtype = gr_simpleExpression();
 
     if (ltype != rtype)
@@ -2990,8 +2988,7 @@ int gr_shiftExpression() {
       }
     } else {
 
-      if (
-foldable)
+      if (foldable)
         load_integerNeg(foldedValue);
       if (tempFoldable) {
         load_integerNeg(tempFoldedValue);
@@ -3064,7 +3061,7 @@ int gr_expression() {
       emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
 
     } else if (operatorSymbol == SYM_LT) {
-      // set to 1 if a < b, elsgr_e 0
+      // set to 1 if a < b, else 0
       emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLT);
 
       tfree(1);
@@ -3100,7 +3097,6 @@ int gr_expression() {
   }
 
   foldable = 0;
-
 
   // assert: allocatedTemporaries == n + 1
 
@@ -3417,11 +3413,7 @@ void gr_statement() {
       if (ltype != rtype)
         typeWarning(ltype, rtype);
 
-       if (arrayIndex >= getSize(entry)) {
-          syntaxErrorMessage((int*) "index out of bounds");
-          exit(1);
-        }
-			emitIFormat(OP_SW,getScope(entry), currentTemporary(), getAddress(entry));
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
       tfree(1);
 
@@ -3525,8 +3517,6 @@ void gr_variable(int offset) {
 
       size = gr_selector();
     }
-	
-		if()
 
     allocatedMemory = allocatedMemory + size * WORDSIZE;
 
@@ -4030,7 +4020,7 @@ int encodeIFormat(int opcode, int rs, int rt, int immediate) {
   return leftShift(leftShift(leftShift(opcode, 5) + rs, 5) + rt, 16) + immediate;
 }
 
-// -------------axErrorM-------------------------------------------------
+// --------------------------------------------------------------
 // 32 bit
 //
 // +------+--------------------------+
@@ -4039,7 +4029,7 @@ int encodeIFormat(int opcode, int rs, int rt, int immediate) {
 //    6                26
 int encodeJFormat(int opcode, int instr_index) {
   // assert: 0 <= opcode < 2^6
-  // assert: 0 axErrorM<= instr_index < 2^26
+  // assert: 0 <= instr_index < 2^26
   return leftShift(opcode, 26) + instr_index;
 }
 
@@ -6938,6 +6928,7 @@ int selfie(int argc, int* argv) {
 }
 
 int main(int argc, int* argv) {
+
   initLibrary();
 
   initScanner();
