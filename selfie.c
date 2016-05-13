@@ -2381,7 +2381,8 @@ int load_arrayEntry(int* variable, int index) {
   talloc();
 
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry) + (index * WORDSIZE));
-
+	
+	tfree(1);
   return getType(entry);
 }
 
@@ -2733,10 +2734,6 @@ int gr_factor() {
     //load_integer(literal);
 
     foldedValue = literal;
-		print(itoa(literal,string_buffer,10,0,0));
-println();
-print(itoa(literal,string_buffer,10,0,0));
-println();
     foldable = 1;
 
     getSymbol();
@@ -2979,6 +2976,7 @@ int gr_shiftExpression() {
 
     getSymbol();
 
+
     rtype = gr_simpleExpression();
 
     if (ltype != rtype)
@@ -2992,7 +2990,8 @@ int gr_shiftExpression() {
       }
     } else {
 
-      if (foldable)
+      if (
+foldable)
         load_integerNeg(foldedValue);
       if (tempFoldable) {
         load_integerNeg(tempFoldedValue);
@@ -3418,7 +3417,11 @@ void gr_statement() {
       if (ltype != rtype)
         typeWarning(ltype, rtype);
 
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+       if (arrayIndex >= getSize(entry)) {
+          syntaxErrorMessage((int*) "index out of bounds");
+          exit(1);
+        }
+			emitIFormat(OP_SW,getScope(entry), currentTemporary(), getAddress(entry));
 
       tfree(1);
 
@@ -3522,6 +3525,8 @@ void gr_variable(int offset) {
 
       size = gr_selector();
     }
+	
+		if()
 
     allocatedMemory = allocatedMemory + size * WORDSIZE;
 
@@ -4025,7 +4030,7 @@ int encodeIFormat(int opcode, int rs, int rt, int immediate) {
   return leftShift(leftShift(leftShift(opcode, 5) + rs, 5) + rt, 16) + immediate;
 }
 
-// --------------------------------------------------------------
+// -------------axErrorM-------------------------------------------------
 // 32 bit
 //
 // +------+--------------------------+
@@ -4034,7 +4039,7 @@ int encodeIFormat(int opcode, int rs, int rt, int immediate) {
 //    6                26
 int encodeJFormat(int opcode, int instr_index) {
   // assert: 0 <= opcode < 2^6
-  // assert: 0 <= instr_index < 2^26
+  // assert: 0 axErrorM<= instr_index < 2^26
   return leftShift(opcode, 26) + instr_index;
 }
 
@@ -6933,7 +6938,6 @@ int selfie(int argc, int* argv) {
 }
 
 int main(int argc, int* argv) {
-	int l;
   initLibrary();
 
   initScanner();
@@ -6947,8 +6951,6 @@ int main(int argc, int* argv) {
 
   argc = argc - 1;
   argv = argv + 1;
-	l=0;
-	l=37+2+3+l;
 
   print((int*) "This is SmileAndCompile Selfie");
   println();
