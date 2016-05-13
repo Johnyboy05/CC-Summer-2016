@@ -2733,6 +2733,10 @@ int gr_factor() {
     //load_integer(literal);
 
     foldedValue = literal;
+		print(itoa(literal,string_buffer,10,0,0));
+println();
+print(itoa(literal,string_buffer,10,0,0));
+println();
     foldable = 1;
 
     getSymbol();
@@ -3061,7 +3065,7 @@ int gr_expression() {
       emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
 
     } else if (operatorSymbol == SYM_LT) {
-      // set to 1 if a < b, else 0
+      // set to 1 if a < b, elsgr_e 0
       emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SLT);
 
       tfree(1);
@@ -3097,6 +3101,7 @@ int gr_expression() {
   }
 
   foldable = 0;
+
 
   // assert: allocatedTemporaries == n + 1
 
@@ -6928,7 +6933,7 @@ int selfie(int argc, int* argv) {
 }
 
 int main(int argc, int* argv) {
-
+	int l;
   initLibrary();
 
   initScanner();
@@ -6942,6 +6947,8 @@ int main(int argc, int* argv) {
 
   argc = argc - 1;
   argv = argv + 1;
+	l=0;
+	l=37+2+3+l;
 
   print((int*) "This is SmileAndCompile Selfie");
   println();
