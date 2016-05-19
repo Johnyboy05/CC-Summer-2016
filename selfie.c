@@ -2942,9 +2942,9 @@ int gr_simpleExpression() {
             emitRFormat(OP_SPECIAL, 0, 0, currTemp, FCT_MFLO);
           }
         }
-        emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_ADDU);
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, previousTemporary(), FCT_ADDU);
       } else if (operatorSymbol == SYM_MINUS) {
-        emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SUBU);
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, previousTemporary(), FCT_SUBU);
       }
       tfree(1);
       tempFoldable = 0;
@@ -3000,9 +3000,9 @@ int gr_shiftExpression() {
       }
 
       if (operatorSymbol == SYM_LSHIFT)
-        emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SLLV);
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, previousTemporary(), FCT_SLLV);
       else if (operatorSymbol == SYM_RSHIFT)
-        emitRFormat(OP_SPECIAL, prevTemp, currTemp, prevTemp, FCT_SRLV);
+        emitRFormat(OP_SPECIAL, prevTemp, currTemp, previousTemporary(), FCT_SRLV);
 
       tfree(1);
       tempFoldable = 0;
