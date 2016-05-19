@@ -2380,7 +2380,7 @@ int load_arrayEntry(int* variable, int index) {
 
   talloc();
 
-  emitIFormat(OP_LW, getScope(entry), getAddress(entry) + (index * WORDSIZE), currentTemporary());
+  emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry) + (index * WORDSIZE));
 
   return getType(entry);
 }
@@ -6941,11 +6941,10 @@ int main(int argc, int* argv) {
   selfieName = (int*) *argv;
 	
 	a[1]=3;
-	y=a[1];
-
+	
   argc = argc - 1;
   argv = argv + 1;
-	print(itoa(y,string_buffer,10,0,0));
+	print(itoa(a[1],string_buffer,10,0,0));
 	println();
   print((int*) "This is SmileAndCompile Selfie");
   println();
