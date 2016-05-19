@@ -2380,7 +2380,7 @@ int load_arrayEntry(int* variable, int index) {
 
   talloc();
 
-  emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry) + (index * WORDSIZE));
+  emitIFormat(OP_LW, getScope(entry), getAddress(entry) + (index * WORDSIZE), currentTemporary());
 
   return getType(entry);
 }
@@ -3400,7 +3400,7 @@ void gr_statement() {
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
 
-    // identifier = expression   arrayIndex = gr_selector();
+    // identifier = expression
     } else if (symbol == SYM_ASSIGN) {
       entry = getVariable(variableOrProcedureName);
 
@@ -3445,7 +3445,7 @@ void gr_statement() {
         if (ltype != rtype){
           typeWarning(ltype, rtype);
         }
-        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry) + (arrayIndex * WORDSIZE));
+        emitIFormat(OP_SW, getScope(entry), getAddress(entry) + (arrayIndex * WORDSIZE), currentTemporary());
 
         tfree(1);
 
@@ -6927,7 +6927,8 @@ int selfie(int argc, int* argv) {
 }
 
 int main(int argc, int* argv) {
-
+	int a[2];
+	int y;	
   initLibrary();
 
   initScanner();
@@ -6938,10 +6939,14 @@ int main(int argc, int* argv) {
   initInterpreter();
 
   selfieName = (int*) *argv;
+	
+	a[1]=3;
+	y=a[1];
 
   argc = argc - 1;
   argv = argv + 1;
-
+	print(itoa(y,string_buffer,10,0,0));
+	println();
   print((int*) "This is SmileAndCompile Selfie");
   println();
 
