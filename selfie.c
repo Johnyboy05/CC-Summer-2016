@@ -663,10 +663,10 @@ int OP_SW      = 43;
 int* OPCODES; // array of strings representing MIPS opcodes
 
 int FCT_NOP     = 0;
-int FCT_SLL		 = 0;
-int FCT_SRL		 = 2;
-int FCT_SLLV	 = 4;
-int FCT_SRLV	 = 6;
+int FCT_SLL		 	= 0;
+int FCT_SRL		 	= 2;
+int FCT_SLLV	 	= 4;
+int FCT_SRLV	 	= 6;
 int FCT_JR      = 8;
 int FCT_SYSCALL = 12;
 int FCT_MFHI    = 16;
@@ -3400,7 +3400,7 @@ void gr_statement() {
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
 
-    // identifier = expression
+    // identifier = expression   arrayIndex = gr_selector();
     } else if (symbol == SYM_ASSIGN) {
       entry = getVariable(variableOrProcedureName);
 
@@ -3516,12 +3516,11 @@ void gr_variable(int offset) {
       getSymbol();
 
       size = gr_selector();
-    }
-
+		}
     allocatedMemory = allocatedMemory + size * WORDSIZE;
 
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, size);
-
+	
   } else {
     syntaxErrorSymbol(SYM_IDENTIFIER);
 
